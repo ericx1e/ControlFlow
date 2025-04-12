@@ -487,7 +487,7 @@ class IfElseBlock extends CompoundBlock {
         this.elseSection = new SectionBlock("else", x, y + 100);
         this.w = 280;
     }
-
+    
     canAcceptChild(mx, my) {
         return this.ifSection.canAcceptChild(mx, my) || this.elseSection.canAcceptChild(mx, my);
     }
@@ -521,6 +521,19 @@ class IfElseBlock extends CompoundBlock {
         this.elseSection.y = this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10;
         this.elseSection.draw();
     }
+
+    evaluate_cond(x) {
+        try {
+          // Replace all occurrences of 'x' with the actual value
+          const conditionWithX = this.cond.replace(/\bx\b/g, x);
+          
+          // Use eval to evaluate the condition directly
+          return eval(conditionWithX);
+        } catch (e) {
+          console.error("Error evaluating condition:", e, "Condition:", this.cond);
+          return false;
+        }
+      }
 
     evaluate(x) {
         try {
