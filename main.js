@@ -14,6 +14,7 @@ const BUTTON_WIDTH = 80;
 const BUTTON_HEIGHT = 30;
 const BUTTON_Y_START = 500;
 const BUTTON_SPACING_Y = 40;
+const SHOP_Y_START = 400
 
 let blocks = []; // Array of length NUM_LINES to hold blocks, Null if empty
 let allBlocks = [];
@@ -27,6 +28,57 @@ let showPopup = false;
 let popupType = ""; // "success" or "failure"
 let popupTimer = 0;
 let popupDuration = 2000; // milliseconds for failure popup
+let shopItems = [
+    {
+      id: 'for_loop',
+      name: 'For Loop',
+      description: 'A classic for loop block',
+      price: 5,
+      purchased: false,
+      block: () => new ForLoopBlock(0, 0)
+    },
+    {
+      id: 'while_loop',
+      name: 'While Loop',
+      description: 'Loop while a condition is true',
+      price: 7,
+      purchased: false,
+      block: () => new WhileBlock(0, 0)
+    },
+    {
+      id: 'if_else',
+      name: 'If-Else Block',
+      description: 'Branch based on conditions',
+      price: 10,
+      purchased: false,
+      block: () => new IfElseBlock(0, 0)
+    },
+    {
+      id: 'inc_by_5',
+      name: 'Increment +5',
+      description: 'Increment by 5 in loops',
+      price: 3,
+      purchased: false,
+      block: () => new IncBlock(5, 0, 0)
+    },
+    {
+      id: 'dec_by_2',
+      name: 'Decrement -2',
+      description: 'Decrement by 2 in loops',
+      price: 3,
+      purchased: false,
+      block: () => new IncBlock(-2, 0, 0)
+    },
+    {
+      id: 'code_mult5',
+      name: 'Multiply x5',
+      description: 'Multiply value by 5',
+      price: 6,
+      purchased: false,
+      block: () => new CodeBlock("x *= 5;", 0, 0)
+    }
+];
+let playerCoins = 0;
 
 function setup() {
     createCanvas(1000, 600);
@@ -72,7 +124,8 @@ function draw() {
     drawSidebar();
     drawBlocks();
     drawButtons();
-    drawTarget()
+    drawTarget();
+    drawShop();
 
     if (draggingBlock) {
         draggingBlock.x = mouseX + draggingBlock.offsetX;
@@ -183,6 +236,105 @@ function drawSidebar() {
     fill(255);
     noStroke();
     text("Available Blocks", SIDEBAR_X, 50);
+}
+
+// Add this function to draw the shop
+function drawShop() {
+    
+    // Shop background
+    fill(40, 40, 50);
+    rect(0, SHOP_Y_START, 700, height - SHOP_Y_START);
+    
+    // Shop header
+    fill(60, 60, 70);
+    rect(0, SHOP_Y_START, 700, 50);
+    
+    fill(255);
+    textSize(24);
+    text("SHOP", 20, SHOP_Y_START + 35);
+    
+    // Show coins
+    fill(255, 215, 0);
+    textAlign(RIGHT);
+    text(`${playerCoins} coins`, 680, SHOP_Y_START + 35);
+    textAlign(LEFT);
+    
+    // Draw shop items in a grid
+    const itemsPerRow = 3;
+    const itemWidth = 210;
+    const itemHeight = 130;
+    const padding = 15;
+    
+    for (let i = 0; i < shopItems.length; i++) {
+      const item = shopItems[i];
+      const row = Math.floor(i / itemsPerRow);
+      const col = i % itemsPerRow;
+      
+      const x = padding + col * (itemWidth + padding);
+      const y = SHOP_Y_START + 60 + row * (itemHeight + padding);
+      
+      // Item background
+      if (item.purchased) {
+        fill(70, 100, 70); // Green tint for purchased items
+      } else if (playerCoins >= item.price) {
+        fill(60, 60, 80); // Available to purchase
+      } else {
+        fill(60, 60, 60); // Can't afford
+      }
+      rect(x, y, itemWidth, itemHeight, 8);
+      
+      // Item name
+      fill(255);
+      textSize(18);
+      text(item.name, x + 10, y + 25);
+      
+      // Item description
+      textSize(14);
+      fill(200);
+      text(item.description, x + 10, y + 50, itemWidth - 20, 40);
+      
+      // Price or purchased status
+      if (item.purchased) {
+        fill(120, 255, 120);
+        text("Purchased", x + 10, y + itemHeight - 15);
+      } else {
+        fill(255, 215, 0);
+        text(`${item.price} coins`, x + 10, y + itemHeight - 15);
+        
+        // Buy button
+        const buttonWidth = 60;
+        const buttonHeight = 30;
+        const buttonX = x + itemWidth - buttonWidth - 10;
+        const buttonY = y + itemHeight - buttonHeight - 10;
+        
+        // Button shadow
+        fill(30, 30, 30, 150);
+        rect(buttonX + 2, buttonY + 2, buttonWidth, buttonHeight, 5);
+        
+        // Button background
+        if (playerCoins >= item.price) {
+          fill(100, 100, 170);
+          if (mouseX > buttonX && mouseX < buttonX + buttonWidth &&
+              mouseY > buttonY && mouseY < buttonY + buttonHeight) {
+            fill(120, 120, 200); // Highlight on hover
+            if (mouseIsPressed) {
+              fill(80, 80, 150); // Darker when pressed
+            }
+          }
+        } else {
+          fill(80, 80, 80); // Disabled
+        }
+        rect(buttonX, buttonY, buttonWidth, buttonHeight, 5);
+        
+        // Button text
+        fill(255);
+        textSize(14);
+        textAlign(CENTER, CENTER);
+        text("Buy", buttonX + buttonWidth/2, buttonY + buttonHeight/2);
+        textAlign(LEFT, BASELINE);
+      }
+    }
+    
 }
 
 function drawTarget() {
@@ -330,6 +482,65 @@ function mousePressed() {
         }
         return; // Return early to prevent other interactions while popup is active
         }
+    }
+
+    const closeButtonX = 650;
+    const closeButtonY = SHOP_Y_START + 10;
+    const closeButtonSize = 30;
+    
+    if (mouseX > closeButtonX && mouseX < closeButtonX + closeButtonSize &&
+        mouseY > closeButtonY && mouseY < closeButtonY + closeButtonSize) {
+      showShop = false;
+      return;
+    }
+    
+    // Handle shop item buy buttons
+    const itemsPerRow = 3;
+    const itemWidth = 210;
+    const itemHeight = 130;
+    const padding = 15;
+    
+    for (let i = 0; i < shopItems.length; i++) {
+      const item = shopItems[i];
+      if (item.purchased) continue; // Skip purchased items
+      
+      const row = Math.floor(i / itemsPerRow);
+      const col = i % itemsPerRow;
+      
+      const x = padding + col * (itemWidth + padding);
+      const y = SHOP_Y_START + 60 + row * (itemHeight + padding);
+      
+      const buttonWidth = 60;
+      const buttonHeight = 30;
+      const buttonX = x + itemWidth - buttonWidth - 10;
+      const buttonY = y + itemHeight - buttonHeight - 10;
+      
+      if (mouseX > buttonX && mouseX < buttonX + buttonWidth &&
+          mouseY > buttonY && mouseY < buttonY + buttonHeight && 
+          playerCoins >= item.price) {
+        
+        // Purchase the item
+        playerCoins -= item.price;
+        item.purchased = true;
+        
+        // Add the block to available blocks
+        const newBlock = item.block();
+        allBlocks.push(newBlock);
+        
+        // Save the purchase to user data
+        currentUser.purchasedItems = currentUser.purchasedItems || [];
+        currentUser.purchasedItems.push(item.id);
+        currentUser.coins = playerCoins;
+        currentUser.save();
+        
+        return;
+      }
+    }
+    
+    // If we clicked somewhere in the shop but not on a button, return
+    // to prevent other interactions while shop is open
+    if (mouseY > SHOP_Y_START) {
+      return;
     }
     
     // Only allow other interactions if popup is not showing
