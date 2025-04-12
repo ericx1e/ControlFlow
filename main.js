@@ -25,11 +25,10 @@ function setup() {
     textSize(16);
     textFont('monospace');
     // Initialize problem manager with default problems
-    problemManager = ProblemManager.createDefaultProblems();
+    problemManager = ProblemManager.setProblems();
 
     // Load or create user
     currentUser = User.load() || new User('user1', 'Player 1');
-    console.log(currentUser.currentProblem)
 
     // Start the first problem if no current problem
     // if (!currentUser.currentProblem) {
