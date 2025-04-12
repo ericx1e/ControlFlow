@@ -7,14 +7,14 @@ const LINE_HEIGHT = 35;
 const CODE_X = 100;
 const CODE_Y_START = 100;
 const TITLE_Y_START = 50
-const CODE_WIDTH = 600;
-const SIDEBAR_X = 820; // Dont really need this lol
+const CODE_WIDTH = 900;
+const SIDEBAR_X = CODE_X + CODE_WIDTH + 50; // Dont really need this lol
 const SIDEBAR_BLOCK_SPACING = 80;
 const BUTTON_WIDTH = 80;
 const BUTTON_HEIGHT = 30;
 const BUTTON_Y_START = 500;
 const BUTTON_SPACING_Y = 40;
-const SHOP_Y_START = 400
+const SHOP_Y_START = 700
 
 let blocks = []; // Array of length NUM_LINES to hold blocks, Null if empty
 let allBlocks = [];
@@ -30,57 +30,8 @@ let popupTimer = 0;
 let popupDuration = 2000; // milliseconds for failure popup
 let shopRefreshCost = 3; // Cost to refresh the shop
 let allPossibleItems = []; // Will hold all possible shop items
-let shopSize = 6; // Number of items shown in the shop at once
-let shopItems = [
-    {
-        id: 'for_loop',
-        name: 'For Loop',
-        description: 'A classic for loop block',
-        price: 5,
-        purchased: false,
-        block: () => new ForLoopBlock(0, 0)
-    },
-    {
-        id: 'while_loop',
-        name: 'While Loop',
-        description: 'Loop while a condition is true',
-        price: 7,
-        purchased: false,
-        block: () => new WhileBlock(0, 0)
-    },
-    {
-        id: 'if_else',
-        name: 'If-Else Block',
-        description: 'Branch based on conditions',
-        price: 10,
-        purchased: false,
-        block: () => new IfElseBlock(0, 0)
-    },
-    {
-        id: 'inc_by_5',
-        name: 'Increment +5',
-        description: 'Increment by 5 in loops',
-        price: 3,
-        purchased: false,
-        block: () => new IncBlock(5, 0, 0)
-    },
-    {
-        id: 'dec_by_2',
-        name: 'Decrement -2',
-        description: 'Decrement by 2 in loops',
-        price: 3,
-        purchased: false,
-        block: () => new IncBlock(-2, 0, 0)
-    },
-    {
-        id: 'code_mult5',
-        name: 'Multiply x5',
-        description: 'Multiply value by 5',
-        price: 6,
-        purchased: false,
-        block: () => new CodeBlock("x *= 5;", 0, 0)
-    }
-];
+let shopSize = 3; // Number of items shown in the shop at once
+let shopItems = [];
 let playerCoins = 10000000;
 
 function initializeItemPool() {
@@ -402,9 +353,9 @@ function refreshShop() {
 
     // Weight selection by rarity
     const rarityWeights = {
-        'common': 60,
-        'uncommon': 30,
-        'rare': 10
+        'common': 75,
+        'uncommon': 20,
+        'rare': 5
     };
 
     // Select random items based on rarity weights until we have enough
@@ -444,7 +395,8 @@ function refreshShop() {
 }
 
 function setup() {
-    createCanvas(1000, 600);
+    let canvas = createCanvas(1440, 900);
+    canvas.position(0, 0);
     textSize(16);
     textFont('monospace');
     // Initialize problem manager with default problems
@@ -465,7 +417,6 @@ function draw() {
     drawCodeLines();
     drawSidebar();
     drawBlocks();
-    drawButtons();
     drawTarget();
     drawShop();
 
@@ -572,25 +523,83 @@ function findDeepestCompoundHover(blockList, mx, my) {
 }
 
 function drawSidebar() {
-    fill(50, 50, 50, 150);
-    // rect(SIDEBAR_X, 0, 200, height);
-    rect(CODE_X + CODE_WIDTH, 0, width - CODE_X - CODE_WIDTH, height);
-    fill(255);
+    // Constants for sidebar layout
+    const SIDEBAR_WIDTH = width - CODE_X - CODE_WIDTH;
+    const SIDEBAR_PADDING = 20;
+    const SECTION_MARGIN = 15;
+    const BLOCK_MARGIN = 10;
+    const HEADER_SIZE = 22;
+    const SIDEBAR_TITLE_Y = 35;
+
+    // Sidebar background with subtle gradient
     noStroke();
-    // textAlign(CENTER, CENTER);
-    text("Available Blocks", SIDEBAR_X, 50);
-    // textAlign(LEFT, TOP)
+    fill(40, 42, 58);
+    rect(CODE_X + CODE_WIDTH, 0, SIDEBAR_WIDTH, height);
+
+    // Add a subtle top header bar
+    fill(30, 32, 48);
+    rect(CODE_X + CODE_WIDTH, 0, SIDEBAR_WIDTH, 60);
+
+    // Title with icon
+    fill(255);
+    textSize(HEADER_SIZE);
+    textAlign(LEFT, CENTER);
+    text("🧩 Available Blocks", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, SIDEBAR_TITLE_Y);
+    textSize(16);
+
+    // Divider line
+    stroke(70, 72, 88);
+    strokeWeight(2);
+    line(
+        CODE_X + CODE_WIDTH + SIDEBAR_PADDING,
+        SIDEBAR_TITLE_Y + SECTION_MARGIN,
+        width - SIDEBAR_PADDING,
+        SIDEBAR_TITLE_Y + SECTION_MARGIN
+    );
+    noStroke();
+
+    // Footer section with helpful info
+    const footerY = height - 80;
+
+    // Footer background
+    fill(30, 32, 48);
+    rect(CODE_X + CODE_WIDTH, footerY, SIDEBAR_WIDTH, 80);
+
+    // Footer content
+    fill(160, 160, 190);
+    textSize(14);
+    text("Drag blocks into your code →", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, footerY + 25);
+    text("Drag compound blocks to nest them", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, footerY + 45);
+    text("Right-click to see block details", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, footerY + 65);
+
+    // Reset alignment
+    textAlign(LEFT, BASELINE);
 }
+
+// Refresh button
+const refreshButtonY = SHOP_Y_START + 10;
+const refreshButtonWidth = 110;
+const refreshButtonHeight = 30;
+const SHOP_WIDTH = 800;
+const refreshButtonX = SHOP_WIDTH / 2 - refreshButtonWidth / 2;
+
+
+// define run button location to be right of the shop
+const runButtonY = 800;
+const runButtonWidth = 110;
+const runButtonHeight = 50;
+const runButtonX = (SHOP_WIDTH + CODE_X + CODE_WIDTH) / 2 - runButtonWidth / 2;
 
 // Update drawShop to include the refresh button
 function drawShop() {
+    noStroke();
     // Shop background
     fill(40, 40, 50);
-    rect(0, SHOP_Y_START, 700, height - SHOP_Y_START);
+    rect(0, SHOP_Y_START, SHOP_WIDTH, height - SHOP_Y_START);
 
     // Shop header
     fill(60, 60, 70);
-    rect(0, SHOP_Y_START, 700, 50);
+    rect(0, SHOP_Y_START, SHOP_WIDTH, 50);
 
     fill(255);
     textSize(24);
@@ -599,31 +608,25 @@ function drawShop() {
     // Show coins
     fill(255, 215, 0);
     textAlign(RIGHT);
-    text(`${playerCoins} coins`, 680, SHOP_Y_START + 35);
+    text(`${playerCoins} coins`, SHOP_WIDTH - 20, SHOP_Y_START + 35);
     textAlign(LEFT);
 
     // Close button
-    const closeButtonX = 650;
-    const closeButtonY = SHOP_Y_START + 10;
-    const closeButtonSize = 30;
+    // const closeButtonX = 650;
+    // const closeButtonY = SHOP_Y_START + 10;
+    // const closeButtonSize = 30;
 
-    fill(80, 60, 60);
-    if (mouseX > closeButtonX && mouseX < closeButtonX + closeButtonSize &&
-        mouseY > closeButtonY && mouseY < closeButtonY + closeButtonSize) {
-        fill(120, 60, 60); // Highlight on hover
-    }
-    rect(closeButtonX, closeButtonY, closeButtonSize, closeButtonSize, 5);
+    // fill(80, 60, 60);
+    // if (mouseX > closeButtonX && mouseX < closeButtonX + closeButtonSize &&
+    //     mouseY > closeButtonY && mouseY < closeButtonY + closeButtonSize) {
+    //     fill(120, 60, 60); // Highlight on hover
+    // }
+    // rect(closeButtonX, closeButtonY, closeButtonSize, closeButtonSize, 5);
 
-    fill(255);
-    textAlign(CENTER, CENTER);
-    text("X", closeButtonX + closeButtonSize / 2, closeButtonY + closeButtonSize / 2);
-    textAlign(LEFT, BASELINE);
-
-    // Refresh button
-    const refreshButtonX = 550;
-    const refreshButtonY = SHOP_Y_START + 10;
-    const refreshButtonWidth = 80;
-    const refreshButtonHeight = 30;
+    // fill(255);
+    // textAlign(CENTER, CENTER);
+    // text("X", closeButtonX + closeButtonSize / 2, closeButtonY + closeButtonSize / 2);
+    // textAlign(LEFT, BASELINE);
 
     // Button shadow
     fill(30, 30, 30, 150);
@@ -734,7 +737,6 @@ function drawShop() {
             } else {
                 fill(60, 60, 60); // Can't afford
             }
-            rect(x, y, itemWidth, itemHeight, 8);
 
             // Item name
             fill(255);
@@ -787,6 +789,24 @@ function drawShop() {
                 textAlign(LEFT, BASELINE);
             }
         }
+        // draw run button
+        // Button shadow
+        fill(10, 10, 10, 150);
+        rect(runButtonX + 5, runButtonY + 5, runButtonWidth, runButtonHeight, 10);
+        // Highlight on hover
+        fill(80, 200, 140);
+        if (mouseX > runButtonX && mouseX < runButtonX + runButtonWidth &&
+            mouseY > runButtonY && mouseY < runButtonY + runButtonHeight) {
+            fill(100, 220, 160); // Highlight on hover
+        }
+        rect(runButtonX, runButtonY, runButtonWidth, runButtonHeight, 10);
+
+        // Button text
+        fill(255);
+        textSize(14);
+        textAlign(CENTER, CENTER);
+        text("▶ Run", runButtonX + runButtonWidth / 2, runButtonY + runButtonHeight / 2);
+        textAlign(LEFT, BASELINE);
     }
 }
 
@@ -842,18 +862,6 @@ function drawBlocks() {
         fill(255, 255, 255, 50);
         rect(CODE_X, gy, 300, 30);
     }
-}
-
-function drawButtons() {
-    fill(50);
-    noStroke();
-    rect(SIDEBAR_X, BUTTON_Y_START, BUTTON_WIDTH, BUTTON_HEIGHT);
-    // rect(SIDEBAR_X + 90, BUTTON_Y_START, BUTTON_WIDTH, BUTTON_HEIGHT);
-    fill(255);
-    text("Run", SIDEBAR_X + 20, BUTTON_Y_START + 20);
-    // text("Save", SIDEBAR_X + 110, BUTTON_Y_START + 20);
-    // rect(SIDEBAR_X, BUTTON_Y_START + BUTTON_SPACING_Y, BUTTON_WIDTH, BUTTON_HEIGHT);
-    // text("Load", SIDEBAR_X + 20, BUTTON_Y_START + BUTTON_SPACING_Y + 20);
 }
 
 // Add this function to draw the popup
@@ -952,22 +960,10 @@ function mousePressed() {
         }
     }
 
-    const closeButtonX = 650;
-    const closeButtonY = SHOP_Y_START + 10;
-    const closeButtonSize = 30;
-
-    if (mouseX > closeButtonX && mouseX < closeButtonX + closeButtonSize &&
-        mouseY > closeButtonY && mouseY < closeButtonY + closeButtonSize) {
-        showShop = false;
-        return;
-    }
+    // Only allow other interactions if popup is not showing
+    if (showPopup) return;
 
     // Handle shop refresh button
-    const refreshButtonX = 550;
-    const refreshButtonY = SHOP_Y_START + 10;
-    const refreshButtonWidth = 80;
-    const refreshButtonHeight = 30;
-
     if (mouseX > refreshButtonX && mouseX < refreshButtonX + refreshButtonWidth &&
         mouseY > refreshButtonY && mouseY < refreshButtonY + refreshButtonHeight &&
         playerCoins >= shopRefreshCost) {
@@ -1012,6 +1008,9 @@ function mousePressed() {
 
             // Add the block to available blocks
             const newBlock = item.block();
+            // give new block random position in sidebar
+            newBlock.x = random(CODE_X + CODE_WIDTH + 50, width - 50);
+            newBlock.y = random(100, height - 150);
             allBlocks.push(newBlock);
 
             // Save the purchase to user data
@@ -1024,18 +1023,11 @@ function mousePressed() {
         }
     }
 
-    // // If we clicked somewhere in the shop but not on a button, return
-    // // to prevent other interactions while shop is open
-    // if (mouseY > SHOP_Y_START) {
-    //   return;
-    // }
-
-    // Only allow other interactions if popup is not showing
-    if (showPopup) return;
-
-    if (mouseX > SIDEBAR_X && mouseX < SIDEBAR_X + BUTTON_WIDTH &&
-        mouseY > BUTTON_Y_START && mouseY < BUTTON_Y_START + BUTTON_HEIGHT)
-        return runCode();
+    // check if run button is pressed
+    if (mouseX > runButtonX && mouseX < runButtonX + runButtonWidth &&
+        mouseY > runButtonY && mouseY < runButtonY + runButtonHeight) {
+        runCode();
+    }
 
     const targetBlock = findBlockAt(mouseX, mouseY, blocks.concat(allBlocks));
 
@@ -1052,10 +1044,10 @@ function mousePressed() {
 function setupShopSystem() {
     // Initialize the full pool of possible items
     initializeItemPool();
-    
+
     // Generate the initial shop items
     refreshShop();
-    
+
     // Add a shop button to your buttons
     // This is already handled in the updated mousePressed function
 }
@@ -1306,7 +1298,8 @@ function loadNextProblem(nextProblem) {
 
     // Reset blocks array
     blocks = [];
-    blocks.push(new CodeBlock("x = " + gameState.problem.initialValue, CODE_X, CODE_Y_START, true));
+    refreshShop();
+    blocks.push(new CodeBlock("x = " + gameState.problem.initialValue + ";", CODE_X, CODE_Y_START, true));
     // blocks.push(...gameState.blocks);
 
     // Update available blocks
@@ -1349,651 +1342,9 @@ function loadLayout() {
     }
 }
 
-class CodeBlock {
-    constructor(text, x, y, isLocked = false) {
-        this.text = text;
-        this.x = x;
-        this.y = y;
-        this.w = textWidth(text) + 20;
-        this.h = 30;
-        this.offsetX = 0;
-        this.offsetY = 0;
-        this.isLocked = isLocked
-    }
-
-    contains(mx, my) {
-        return mx > this.x && mx < this.x + this.w && my > this.y && my < this.y + this.h;
-    }
-
-    draw(isDragging = false) {
-        noStroke();
-        // Drop shadow
-        fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
-        // Main block
-        if (this.isLocked) {
-            fill('#664'); // Different color for locked blocks
-        } else {
-            fill(isDragging ? '#557' : '#446');
-        }
-        rect(this.x, this.y, this.w, this.h, 6);
-        fill(255);
-        text(this.text, this.x + 10, this.y + 20);
-
-    }
-
-    evaluate(x) {
-        try {
-            return new Function("x", `${this.text}; return x;`)(x);
-        } catch (e) {
-            console.error("Error in block:", this.text);
-            return x;
-        }
-    }
-
-    getHeightInLines() {
-        return 1;
-    }
-
-    serialize() {
-        return { type: "code", text: this.text };
-    }
-}
-
-class CompoundBlock extends CodeBlock {
-    constructor(text, x, y) {
-        super(text, x, y, false);
-        this.children = [];
-        this.header = {};
-    }
-
-    addChild(block) {
-        this.children.push(block);
-    }
-
-    canAcceptChild(mx, my) {
-        const childAreaTop = this.y + this.h;
-        let childrenLineHeight = this.getHeightInLines() - 1;
-        // for (let child of this.children) {
-        //     childrenLineHeight += child.getHeightInLines();
-        // }
-        const childAreaBottom = childAreaTop + (this.getHeightInLines() - 1) * LINE_HEIGHT + 10;
-        return (
-            mx > this.x + 20 &&
-            mx < this.x + this.w - 20 &&
-            my > childAreaTop &&
-            my < childAreaBottom
-        );
-    }
-
-    getHeightInLines() {
-        return 1 + this.children.reduce((sum, c) => sum + c.getHeightInLines(), 0);
-    }
-
-    addHeaderBlock(block) {
-        const typeName = block.constructor.name;
-        this.header[typeName] = block;
-    }
-
-    getHeaderBlock(type) {
-        return this.header[type.name] || null;
-    }
-
-    hasHeaderBlock(type) {
-        return !!this.getHeaderBlock(type);
-    }
-
-    removeHeaderBlock(block) {
-        const typeName = block.constructor.name;
-        if (this.header[typeName] === block) {
-            delete this.header[typeName];
-        }
-    }
-
-    canAcceptHeader(mx, my) {
-        return mx > this.x && mx < this.x + this.w &&
-            my > this.y && my < this.y + this.h &&
-            !this.hasHeaderBlock(ConditionBlock); // allow only one condition
-    }
-
-    acceptHeader(block) {
-        if (block instanceof ConditionBlock && !this.hasHeaderBlock(ConditionBlock)) {
-            this.addHeaderBlock(block);
-            return true;
-        }
-
-        return false;
-    }
-
-    draw(isDragging = false) {
-        // First: calculate dynamic width based on children
-        let baseWidth = max(textWidth(this.text) + 40, this.baseWidth); // base for header
-        let maxWidth = 0;
-
-        const allChildren = this instanceof IfElseBlock
-            ? [...this.ifSection.children, ...this.elseSection.children]
-            : this.children;
-
-        for (let child of allChildren) {
-            const childWidth = 40 + child.w;
-            if (childWidth > maxWidth) {
-                maxWidth = childWidth;
-            }
-        }
-
-        let headerWidth = baseWidth;
-        for (let key in this.header) {
-            let h = this.header[key];
-            headerWidth += h.w;
-        }
-        if (headerWidth > maxWidth) {
-            maxWidth = headerWidth;
-        }
-
-        this.w = max(baseWidth, maxWidth + 10); // set width with padding
-
-        // Now draw block shell
-        noStroke();
-        fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
-
-        fill(isDragging ? '#966' : '#855');
-        rect(this.x, this.y, this.w, this.h, 6);
-
-        // fill(255);
-        // text(this.text, this.x + 10, this.y + 20);
-        if (!(this instanceof ForLoopBlock)) {
-            if (this.hasHeaderBlock(ConditionBlock)) {
-                const condBlock = this.getHeaderBlock(ConditionBlock);
-                fill(255);
-                text(`${this.text.split("(")[0]}(`, this.x + 10, this.y + 20);
-                condBlock.x = this.x + textWidth(`${this.text.split("(")[0]}(`) + 10;
-                condBlock.y = this.y + 2;
-                condBlock.draw();
-                text(`)`, condBlock.x + condBlock.w + 5, this.y + 20);
-            } else {
-                fill(255);
-                text(`${this.text} (?)`, this.x + 10, this.y + 20);
-            }
-        }
-
-        // Child container background
-        fill(50, 50, 50, 150);
-        let childHeight = this.getHeightInLines() - 1;
-        rect(this.x + 20, this.y + this.h, this.w - 20, childHeight * LINE_HEIGHT + 10, 6);
-
-        // Draw children
-        let childY = this.y + this.h + 5;
-        for (let child of allChildren) {
-            child.x = this.x + 30;
-            child.y = childY;
-            child.draw();
-            childY += child.getHeightInLines() * LINE_HEIGHT;
-        }
-    }
-
-    evaluate(x) {
-        for (let child of this.children) {
-            x = child.evaluate(x);
-        }
-        return x;
-    }
-}
-
-class HeaderBlock extends CodeBlock {
-    constructor(text, x, y) {
-        super(text, x, y);
-        this.w = textWidth(text) + 20;
-        this.h = 25;
-    }
-
-    draw(isDragging = false) {
-        noStroke();
-        fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
-        fill(isDragging ? '#6a6' : '#4b4');
-        rect(this.x, this.y, this.w, this.h, 6);
-        fill(255);
-        text(this.text, this.x + 10, this.y + 20);
-    }
-
-    isHeaderOnly() {
-        return true;
-    }
-}
-
-class ForLoopBlock extends CompoundBlock {
-    constructor(x, y) {
-        super("for (", x, y);
-        // this.init = "let i = 0";
-        // this.cond = "i < 3";
-        // this.inc = "i++";
-        this.body = this.children;
-        this.baseWidth = 170;
-    }
-
-    canAcceptHeader(mx, my, block) {
-        return mx > this.x && mx < this.x + this.w &&
-            my > this.y && my < this.y + this.h &&
-            (
-                (block instanceof InitBlock && !this.hasHeaderBlock(InitBlock)) ||
-                (block instanceof ConditionBlock && !this.hasHeaderBlock(ConditionBlock)) ||
-                (block instanceof IncBlock && !this.hasHeaderBlock(IncBlock))
-            );
-    }
-
-    acceptHeader(block) {
-        if (
-            (block instanceof InitBlock && !this.hasHeaderBlock(InitBlock)) ||
-            (block instanceof ConditionBlock && !this.hasHeaderBlock(ConditionBlock)) ||
-            (block instanceof IncBlock && !this.hasHeaderBlock(IncBlock))
-        ) {
-            this.addHeaderBlock(block);
-            return true;
-        }
-        return false;
-    }
-
-    draw(isDragging = false) {
-        super.draw(isDragging);
-        fill(255);
-        text("for (", this.x + 10, this.y + 20);
-
-        let offset = this.x + textWidth("for (") + 10;
-
-        const init = this.getHeaderBlock(InitBlock);
-        if (init) {
-            init.x = offset;
-            init.y = this.y + 2;
-            init.draw();
-            offset += init.w + 10;
-        } else {
-            text("?", offset, this.y + 20);
-            offset += 20;
-        }
-
-        text(";", offset, this.y + 20);
-        offset += 15;
-
-        const cond = this.getHeaderBlock(ConditionBlock);
-        if (cond) {
-            cond.x = offset;
-            cond.y = this.y + 2;
-            cond.draw();
-            offset += cond.w + 10;
-        } else {
-            text("?", offset, this.y + 20);
-            offset += 20;
-        }
-
-        text(";", offset, this.y + 20);
-        offset += 15;
-
-        const inc = this.getHeaderBlock(IncBlock);
-        if (inc) {
-            inc.x = offset;
-            inc.y = this.y + 2;
-            inc.draw();
-            offset += inc.w + 10;
-        } else {
-            text("?", offset, this.y + 20);
-            offset += 20;
-        }
-
-        text(")", offset, this.y + 20);
-    }
-
-    evaluate(x) {
-        try {
-            // let bodyCode = this.children.map(b => b.text).join("\n");
-            //let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
-            //return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
-
-            const initBlock = this.getHeaderBlock(InitBlock);
-            const condBlock = this.getHeaderBlock(ConditionBlock);
-            const incBlock = this.getHeaderBlock(IncBlock);
-
-            if (!initBlock || !condBlock || !incBlock) {
-                console.warn("Missing header blocks in for-loop");
-                return x;
-            }
-
-            for (let i = initBlock.value; eval(condBlock.text); i += incBlock.value) {
-                // console.log(i);
-                for (let child of this.children) {
-                    x = child.evaluate(x);
-                }
-            }
-            return x;
-        } catch (e) {
-            console.error("Loop Error:", e);
-            return x;
-        }
-    }
-
-    serialize() {
-        return {
-            type: "for",
-            init: this.init,
-            cond: this.cond,
-            inc: this.inc,
-            body: this.children.map(b => b.serialize())
-        };
-    }
-}
-
-class IfElseBlock extends CompoundBlock {
-    constructor(x, y) {
-        super("if (...) { } else { }", x, y);
-        // this.cond = "x % 2 === 0";
-        this.ifSection = new SectionBlock("if", x, y + 35);
-        this.elseSection = new SectionBlock("else", x, y + 100);
-        this.baseWidth = 280;
-    }
-
-    canAcceptChild(mx, my) {
-        return this.ifSection.canAcceptChild(mx, my) || this.elseSection.canAcceptChild(mx, my);
-    }
-
-    addChild(block) {
-        if (this.ifSection.canAcceptChild(mouseX, mouseY)) {
-            this.ifSection.addChild(block);
-        } else {
-            this.elseSection.addChild(block);
-        }
-    }
-
-    getHeightInLines() {
-        return 2 + this.ifSection.getHeightInLines() + this.elseSection.getHeightInLines();
-    }
-
-    canAcceptHeader(mx, my, block) {
-        return mx > this.x && mx < this.x + this.w &&
-            my > this.y && my < this.y + this.h &&
-            block instanceof ConditionBlock &&
-            !this.hasHeaderBlock(ConditionBlock);
-    }
-
-    acceptHeader(block) {
-        if (block instanceof ConditionBlock && !this.hasHeaderBlock(ConditionBlock)) {
-            this.addHeaderBlock(block);
-            return true;
-        }
-        return false;
-    }
-
-    draw(isDragging = false) {
-        noStroke();
-
-        // Draw IF container
-        fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
-        fill(isDragging ? '#559' : '#458');
-        rect(this.x, this.y, this.w, this.h, 6);
-
-        // Draw IF header
-        fill(255);
-        let offset = this.x + 10;
-        text("if (", offset, this.y + 20);
-        offset += textWidth("if (");
-
-        const condBlock = this.getHeaderBlock(ConditionBlock);
-        if (condBlock) {
-            condBlock.x = offset;
-            condBlock.y = this.y + 2;
-            condBlock.draw();
-            offset += condBlock.w + 5;
-        } else {
-            text("?", offset, this.y + 20);
-            offset += 20;
-        }
-
-        text(") {", offset, this.y + 20);
-
-        // IF section
-        this.ifSection.x = this.x + 20;
-        this.ifSection.y = this.y + this.h;
-        this.ifSection.draw();
-
-        // ELSE block header
-        const elseY = this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10;
-        fill(30);
-        rect(this.x, elseY, this.w, this.h, 6);
-        fill(255);
-        text("else {", this.x + 10, elseY + 20);
-
-        // ELSE section
-        this.elseSection.x = this.x + 20;
-        this.elseSection.y = elseY + this.h;
-        this.elseSection.draw();
-    }
-
-
-    evaluate(x) {
-        try {
-            const condBlock = this.getHeaderBlock(ConditionBlock);
-            if (!condBlock) {
-                console.warn("Missing ConditionBlock in if/else block");
-                return x;
-            }
-
-            const conditionMet = condBlock.evaluateCondition(x);
-            const section = conditionMet ? this.ifSection : this.elseSection;
-
-            for (let child of section.children) {
-                x = child.evaluate(x);
-            }
-        } catch (e) {
-            console.error("IfElseBlock Error:", e);
-        }
-        return x;
-    }
-
-    serialize() {
-        return {
-            type: "ifelse",
-            cond: this.cond,
-            ifBody: this.ifSection.children.map(b => b.serialize()),
-            elseBody: this.elseSection.children.map(b => b.serialize())
-        };
-    }
-}
-
-class SectionBlock {
-    constructor(label, x, y) {
-        this.label = label;
-        this.x = x;
-        this.y = y;
-        this.children = [];
-    }
-
-    canAcceptChild(mx, my) {
-        const top = this.y;
-        const bottom = top + this.getHeightInLines() * LINE_HEIGHT + 10;
-        return mx > this.x && mx < this.x + 240 && my > top && my < bottom;
-    }
-
-    addChild(block) {
-        this.children.push(block);
-    }
-
-    getHeightInLines() {
-        return 0 + this.children.reduce((sum, c) => sum + c.getHeightInLines(), 0);
-    }
-
-    draw() {
-        fill(70);
-        // text(this.label, this.x + 5, this.y + 15);
-        fill(50, 50, 50, 150);
-        rect(this.x, this.y, 240, this.getHeightInLines() * LINE_HEIGHT + 10, 6);
-
-        let childY = this.y + 10;
-        for (let child of this.children) {
-            child.x = this.x + 10;
-            child.y = childY;
-            child.draw();
-            childY += child.getHeightInLines() * LINE_HEIGHT;
-        }
-    }
-}
-
-class WhileBlock extends CompoundBlock {
-    constructor(x, y) {
-        super("while", x, y);
-        // this.cond = "x < 10";
-        this.condBlock = null;  // holds the ConditionBlock instance
-        // this.text = `while (${this.cond})`;
-        this.baseWidth = 110;
-    }
-
-    evaluate_cond(x) {
-        const parts = this.cond.trim().split(/\s+/);
-        let cond = parts[0];
-        let val = parts[1];
-        return eval(`x ${cond} ${val}`);
-    }
-
-    evaluate(x) {
-        try {
-            //if (this.children.length === 0) return x; // Avoid infinite loop
-            //while (new Function("x", `return ${this.cond}`)(x)) {
-            //for (let child of this.children) x = child.evaluate(x);
-            //}
-
-            const condBlock = this.getHeaderBlock(ConditionBlock);
-
-            if (!condBlock) {
-                console.warn("Missing header blocks in while-loop");
-                return x;
-            }
-
-            let maxIterations = 10000;
-            let count = 0;
-
-            while (condBlock.evaluateCondition(x) && count++ < maxIterations) {
-                // console.log(x)
-                for (let child of this.children) {
-                    x = child.evaluate(x);
-                }
-            }
-
-            if (count >= maxIterations) {
-                console.warn("Max iterations reached")
-            }
-
-            return x;
-        } catch (e) {
-            console.error("While Error:", e);
-        }
-        return x;
-    }
-
-    serialize() {
-        return {
-            type: "while",
-            cond: this.cond,
-            body: this.children.map(b => b.serialize())
-        };
-    }
-}
-
-class PrintBlock extends CodeBlock {
-    constructor(x, y) {
-        super("print(x);", x, y);
-        this.w = 120;
-    }
-
-    evaluate(x) {
-        console.log("PrintBlock:", x);
-        return x;
-    }
-
-    serialize() {
-        return { type: "print" };
-    }
-}
-
-class ConditionBlock extends HeaderBlock {
-    constructor(text, x, y) {
-        super(text, x, y);
-    }
-
-    evaluateCondition(x) {
-        try {
-            return new Function("x", `return (${this.text});`)(x);
-        } catch (e) {
-            console.error("ConditionBlock Error:", e, "text:", this.text);
-            return false;
-        }
-    }
-
-    serialize() {
-        return { type: "cond", text: this.text };
-    }
-}
-
-
-function deserialize(obj) {
-    if (!obj) return null;
-    if (obj.type === "code") return new CodeBlock(obj.text, CODE_X, CODE_Y_START);
-    if (obj.type === "print") return new PrintBlock(CODE_X, CODE_Y_START);
-    if (obj.type === "while") {
-        const w = new WhileBlock(CODE_X, CODE_Y_START);
-        w.cond = obj.cond;
-        w.children = obj.body.map(deserialize);
-        return w;
-    }
-    if (obj.type === "ifelse") {
-        const ie = new IfElseBlock(CODE_X, CODE_Y_START);
-        ie.cond = obj.cond;
-        ie.ifChildren = obj.ifBody.map(deserialize);
-        ie.elseChildren = obj.elseBody.map(deserialize);
-        return ie;
-    }
-    if (obj.type === "for") {
-        const loop = new ForLoopBlock(CODE_X, CODE_Y_START);
-        loop.init = obj.init;
-        loop.cond = obj.cond;
-        loop.inc = obj.inc;
-        loop.children = obj.body.map(deserialize);
-        return loop;
-    }
-    return null;
-}
-
-class InitBlock extends HeaderBlock {
-    constructor(value, x, y) {
-        super(`let i = ${value}`, x, y);
-        this.value = value;
-    }
-
-    getValue() {
-
-    }
-
-    serialize() {
-        return { type: "init", text: this.text };
-    }
-}
-
-class IncBlock extends HeaderBlock {
-    constructor(value, x, y) {
-        if (value >= 0) {
-            super(`i += ${value}`, x, y);
-        } else {
-            super(`i -= ${-value}`, x, y);
-        }
-        this.value = value
-    }
-
-    serialize() {
-        return { type: "inc", text: this.text };
-    }
-}
-
 // Utility function for factorial block
 function factorial(n) {
     if (n <= 1) return 1;
     return n * factorial(n - 1);
-  }
+}
 
