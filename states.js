@@ -412,9 +412,9 @@ class ProblemManager {
  * Create a set of predefined problems based on the specifications
  * @returns {ProblemManager} Populated problem manager
  */
-static setProblems() {
+  static setProblems() {
     const manager = new ProblemManager();
-  
+
     // Problem 1: Simple Addition
     const problem1 = new Problem(
       'p1',
@@ -425,7 +425,7 @@ static setProblems() {
     );
     problem1.addAvailableBlock(new CodeBlock("x += 1;", SIDEBAR_X, CODE_Y_START));
     manager.addProblem(problem1);
-  
+
     // Problem 2: For Loop Challenge
     const problem2 = new Problem(
       'p2',
@@ -434,21 +434,14 @@ static setProblems() {
       10,  // initial value
       2    // target value
     );
-    
-    // Create a for loop block with appropriate header blocks
-    const forLoop2 = new ForLoopBlock(SIDEBAR_X, CODE_Y_START);
-    const initBlock2 = new InitBlock("let i = 0", 0, 0);
-    const condBlock2 = new ConditionBlock("i < 3", 0, 0);
-    const incBlock2 = new IncBlock("i++", 0, 0);
-    
-    forLoop2.addHeaderBlock(initBlock2);
-    forLoop2.addHeaderBlock(condBlock2);
-    forLoop2.addHeaderBlock(incBlock2);
-    
-    problem2.addAvailableBlock(forLoop2);
-    problem2.addAvailableBlock(new CodeBlock("x -= 2;", SIDEBAR_X, CODE_Y_START + 40));
+
+    problem2.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START));
+    problem2.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 40));
+    problem2.addAvailableBlock(new ConditionBlock("i < 3", SIDEBAR_X, CODE_Y_START + 80));
+    problem2.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
+    problem2.addAvailableBlock(new CodeBlock("x -= 2;", SIDEBAR_X, CODE_Y_START + 160));
     manager.addProblem(problem2);
-  
+
     // Problem 3: Division with While
     const problem3 = new Problem(
       'p3',
@@ -457,16 +450,16 @@ static setProblems() {
       10,   // initial value
       0.5   // target value
     );
-    
+
     // Create a while loop with condition
     const whileLoop3 = new WhileBlock(SIDEBAR_X, CODE_Y_START);
     const whileCond3 = new ConditionBlock("x > 1", 0, 0);
     whileLoop3.addHeaderBlock(whileCond3);
-    
+
     problem3.addAvailableBlock(new CodeBlock("x /= 2;", SIDEBAR_X, CODE_Y_START));
     problem3.addAvailableBlock(whileLoop3);
     manager.addProblem(problem3);
-  
+
     // Problem 4: Points Counter
     const problem4 = new Problem(
       'p4',
@@ -475,21 +468,21 @@ static setProblems() {
       -2,   // initial value
       -2    // target value
     );
-    
+
     // Create a for loop with appropriate header blocks
     const forLoop4 = new ForLoopBlock(SIDEBAR_X, CODE_Y_START);
     const initBlock4 = new InitBlock("let i = 0", 0, 0);
     const condBlock4 = new ConditionBlock("i < 5", 0, 0);
     const incBlock4 = new IncBlock("i += 2", 0, 0);
-    
+
     forLoop4.addHeaderBlock(initBlock4);
     forLoop4.addHeaderBlock(condBlock4);
     forLoop4.addHeaderBlock(incBlock4);
-    
+
     problem4.addAvailableBlock(new CodeBlock("points += x;", SIDEBAR_X, CODE_Y_START));
     problem4.addAvailableBlock(forLoop4);
     manager.addProblem(problem4);
-  
+
     return manager;
   }
 
@@ -497,11 +490,11 @@ static setProblems() {
  * Load problems from the JSON file and populate the problem manager
  * @returns {Promise<ProblemManager>} Populated problem manager
  */
-static loadProblemsFromJSON() {
+  static loadProblemsFromJSON() {
     return new Promise((resolve, reject) => {
       // Create a new problem manager
       const manager = new ProblemManager();
-      
+
       // Fetch the problems.json file
       fetch('problems.json')
         .then(response => {
@@ -522,7 +515,7 @@ static loadProblemsFromJSON() {
               problemData.targetValue
             );
 
-            
+
             // Add available blocks
             if (problemData.availableBlocks) {
               problemData.availableBlocks.forEach(blockData => {
@@ -534,11 +527,11 @@ static loadProblemsFromJSON() {
             }
 
             console.log(problem)
-            
+
             // Add the problem to the manager
             manager.addProblem(problem);
           });
-          
+
           // Resolve the promise with the populated manager
           resolve(manager);
         })
@@ -550,7 +543,7 @@ static loadProblemsFromJSON() {
         });
     });
   }
-  
+
 
 }
 
@@ -560,97 +553,97 @@ static loadProblemsFromJSON() {
    * @returns {CodeBlock|ForLoopBlock|WhileBlock|IfElseBlock} The created block
    */
 function createBlockFromData(blockData) {
-    let block;
-    
-    switch (blockData.type) {
-      case 'code':
-        block = new CodeBlock(blockData.text, SIDEBAR_X, CODE_Y_START);
-        break;
-        
-      case 'for':
-        block = new ForLoopBlock(SIDEBAR_X, CODE_Y_START);
-        
-        // Add header blocks if specified
-        if (blockData.headerBlocks) {
-          if (blockData.headerBlocks.InitBlock) {
-            const initBlock = new InitBlock(
-              blockData.headerBlocks.InitBlock.text, 
-              0, 0
-            );
-            block.addHeaderBlock(initBlock);
-          }
-          
-          if (blockData.headerBlocks.ConditionBlock) {
-            const condBlock = new ConditionBlock(
-              blockData.headerBlocks.ConditionBlock.text, 
-              0, 0
-            );
-            block.addHeaderBlock(condBlock);
-          }
-          
-          if (blockData.headerBlocks.IncBlock) {
-            const incBlock = new IncBlock(
-              blockData.headerBlocks.IncBlock.text, 
-              0, 0
-            );
-            block.addHeaderBlock(incBlock);
-          }
+  let block;
+
+  switch (blockData.type) {
+    case 'code':
+      block = new CodeBlock(blockData.text, SIDEBAR_X, CODE_Y_START);
+      break;
+
+    case 'for':
+      block = new ForLoopBlock(SIDEBAR_X, CODE_Y_START);
+
+      // Add header blocks if specified
+      if (blockData.headerBlocks) {
+        if (blockData.headerBlocks.InitBlock) {
+          const initBlock = new InitBlock(
+            blockData.headerBlocks.InitBlock.text,
+            0, 0
+          );
+          block.addHeaderBlock(initBlock);
         }
-        break;
-        
-      case 'while':
-        block = new WhileBlock(SIDEBAR_X, CODE_Y_START);
-        
-        // Add condition block if specified
-        if (blockData.headerBlocks && blockData.headerBlocks.ConditionBlock) {
+
+        if (blockData.headerBlocks.ConditionBlock) {
           const condBlock = new ConditionBlock(
-            blockData.headerBlocks.ConditionBlock.text, 
+            blockData.headerBlocks.ConditionBlock.text,
             0, 0
           );
           block.addHeaderBlock(condBlock);
         }
-        break;
-        
-      case 'ifelse':
-        block = new IfElseBlock(SIDEBAR_X, CODE_Y_START);
-        
-        // Set condition if specified
-        if (blockData.headerBlocks && blockData.headerBlocks.ConditionBlock) {
-          const condBlock = new ConditionBlock(
-            blockData.headerBlocks.ConditionBlock.text, 
+
+        if (blockData.headerBlocks.IncBlock) {
+          const incBlock = new IncBlock(
+            blockData.headerBlocks.IncBlock.text,
             0, 0
           );
-          block.addHeaderBlock(condBlock);
+          block.addHeaderBlock(incBlock);
         }
-        break;
-        
-      case 'print':
-        block = new PrintBlock(SIDEBAR_X, CODE_Y_START);
-        break;
-        
-      // Header blocks for compound blocks
-      case 'condition':
-        block = new ConditionBlock(blockData.text, SIDEBAR_X, CODE_Y_START);
-        break;
-        
-      case 'init':
-        block = new InitBlock(blockData.text, SIDEBAR_X, CODE_Y_START);
-        break;
-        
-      case 'inc':
-        block = new IncBlock(blockData.text, SIDEBAR_X, CODE_Y_START);
-        break;
-        
-      default:
-        console.error('Unknown block type:', blockData.type);
-        return null;
-    }
-    
-    // Add any additional properties
-    if (blockData.isLocked !== undefined) block.isLocked = blockData.isLocked;
-    
-    return block;
+      }
+      break;
+
+    case 'while':
+      block = new WhileBlock(SIDEBAR_X, CODE_Y_START);
+
+      // Add condition block if specified
+      if (blockData.headerBlocks && blockData.headerBlocks.ConditionBlock) {
+        const condBlock = new ConditionBlock(
+          blockData.headerBlocks.ConditionBlock.text,
+          0, 0
+        );
+        block.addHeaderBlock(condBlock);
+      }
+      break;
+
+    case 'ifelse':
+      block = new IfElseBlock(SIDEBAR_X, CODE_Y_START);
+
+      // Set condition if specified
+      if (blockData.headerBlocks && blockData.headerBlocks.ConditionBlock) {
+        const condBlock = new ConditionBlock(
+          blockData.headerBlocks.ConditionBlock.text,
+          0, 0
+        );
+        block.addHeaderBlock(condBlock);
+      }
+      break;
+
+    case 'print':
+      block = new PrintBlock(SIDEBAR_X, CODE_Y_START);
+      break;
+
+    // Header blocks for compound blocks
+    case 'condition':
+      block = new ConditionBlock(blockData.text, SIDEBAR_X, CODE_Y_START);
+      break;
+
+    case 'init':
+      block = new InitBlock(blockData.text, SIDEBAR_X, CODE_Y_START);
+      break;
+
+    case 'inc':
+      block = new IncBlock(blockData.text, SIDEBAR_X, CODE_Y_START);
+      break;
+
+    default:
+      console.error('Unknown block type:', blockData.type);
+      return null;
   }
+
+  // Add any additional properties
+  if (blockData.isLocked !== undefined) block.isLocked = blockData.isLocked;
+
+  return block;
+}
 
 // Helper function to save layout for just the given blocks
 function saveLayout(blocks) {
@@ -662,7 +655,7 @@ function saveLayout(blocks) {
 // window.ProblemManager = ProblemManager;
 
 class Shop {
-  
+
   constructor(contents) {
     // Map productType to price
     this.contents = contents;
@@ -679,7 +672,7 @@ class Shop {
 
   static initializeDefaultShop() {
     const defaultShop = new Shop();
-    let defaultContents = {'forblock':5};
+    let defaultContents = { 'forblock': 5 };
     defaultShop.contents = defaultContents;
     return defaultShop;
   }
