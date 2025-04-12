@@ -438,18 +438,31 @@ class CompoundBlock extends CodeBlock {
 class ForLoopBlock extends CompoundBlock {
     constructor(x, y) {
         super("for (...)", x, y);
-        this.init = "let i = 0";
-        this.cond = "i < 3";
-        this.inc = "i++";
+        this.init = 0;
+        this.cond = "< 3";
+        this.inc = 1;
         this.body = this.children;
         this.w = 250;
+    }
+
+    evaluate_cond(x) {
+        const parts = this.cond.trim().split(/\s+/);
+        let cond = parts[0];
+        let val = parts[1];
+        return eval(`x ${cond} ${val}`);
     }
 
     evaluate(x) {
         try {
             // let bodyCode = this.children.map(b => b.text).join("\n");
-            let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
-            return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
+            //let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
+            //return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
+            for (let i = this.init; this.evaluate_cond(i); i += this.inc) {
+                for (let child of this.children) {
+                    x = child.evaluate(x);
+                }
+            }
+            return x;            
         } catch (e) {
             console.error("Loop Error:", e);
             return x;
@@ -573,16 +586,29 @@ class SectionBlock {
 class WhileBlock extends CompoundBlock {
     constructor(x, y) {
         super("while (...)", x, y);
-        this.cond = "x < 10";
+        this.cond = "< 10";
         this.w = 250;
+    }
+
+    evaluate_cond(x) {
+        const parts = this.cond.trim().split(/\s+/);
+        let cond = parts[0];
+        let val = parts[1];
+        return eval(`x ${cond} ${val}`);
     }
 
     evaluate(x) {
         try {
-            if (this.children.length === 0) return x; // Avoid infinite loop
-            while (new Function("x", `return ${this.cond}`)(x)) {
-                for (let child of this.children) x = child.evaluate(x);
+            //if (this.children.length === 0) return x; // Avoid infinite loop
+            //while (new Function("x", `return ${this.cond}`)(x)) {
+                //for (let child of this.children) x = child.evaluate(x);
+            //}
+            while (this.evaluate_cond(x)) {
+                for (let child of this.children) {
+                    x = child.evaluate(x);
+                }
             }
+            return x;
         } catch (e) {
             console.error("While Error:", e);
         }
