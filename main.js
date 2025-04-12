@@ -32,20 +32,20 @@ function setup() {
     console.log(currentUser.currentProblem)
 
     // Start the first problem if no current problem
-    if (!currentUser.currentProblem) {
-        const problem = problemManager.getProblem(problemManager.problemOrder[0]);
-        const gameState = currentUser.startProblem(firstProblem);
-    }
-    const problem = problemManager.getProblem(currentUser.currentProblem);
-    const gameState = currentUser.startProblem(problem)
-    // Set up game state
-    blocks.push(new CodeBlock("x = " + gameState.problem.initialValue, CODE_X, CODE_Y_START, true))
-    blocks.push(...gameState.blocks);
-    allBlocks = gameState.availableBlocks;
+    // if (!currentUser.currentProblem) {
+    const firstProblem = problemManager.getProblem(problemManager.problemOrder[0]);
+    loadNextProblem(firstProblem);
+    // }
+    // const problem = problemManager.getProblem(currentUser.currentProblem);
+    // const gameState = currentUser.startProblem(problem)
+    // // Set up game state
+    // blocks.push(new CodeBlock("x = " + gameState.problem.initialValue, CODE_X, CODE_Y_START, true))
+    // blocks.push(...gameState.blocks);
+    // allBlocks = gameState.availableBlocks;
 
-    if (!blocks || blocks.length === 0) {
-        for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
-    }
+    // if (!blocks || blocks.length === 0) {
+    //     for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
+    // }
     // for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
     // allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100));
     // allBlocks.push(new CodeBlock("x *= 2;", SIDEBAR_X, 100 + SIDEBAR_BLOCK_SPACING));
@@ -457,9 +457,10 @@ function loadNextProblem(nextProblem) {
     // Reset blocks array
     blocks = [];
     blocks.push(new CodeBlock("x = " + gameState.problem.initialValue, CODE_X, CODE_Y_START, true));
-    blocks.push(...gameState.blocks);
+    // blocks.push(...gameState.blocks);
 
     // Update available blocks
+    console.log(gameState.availableBlocks)
     allBlocks = gameState.availableBlocks;
 
     // Fill the rest with nulls
