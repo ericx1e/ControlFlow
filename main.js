@@ -100,8 +100,14 @@ function drawCodeLines() {
             compoundHover = findDeepestCompoundHover(blocks, mouseX, mouseY);
 
             ghostIndex = -1;
-        } else if (ghostIndex === -1 && block.contains(mouseX, mouseY)) {
-            ghostIndex = i;
+        } else if (ghostIndex === -1 && block.contains(mouseX, mouseY) && !block.isLocked) {
+            if (draggingBlock instanceof HeaderBlock) {
+                if (blocks[i] instanceof CompoundBlock && blocks[i].canAcceptHeader(mouseX, mouseY, draggingBlock)) {
+                    ghostIndex = i;
+                }
+            } else {
+                ghostIndex = i;
+            }
         }
 
         // Draw line numbers for span
@@ -125,7 +131,7 @@ function drawCodeLines() {
         text(`${currentLine + 1}:`, 50, currentY - 10);
     }
 
-    if (ghostIndex === -1 && draggingBlock) {
+    if (ghostIndex === -1 && draggingBlock && !(draggingBlock instanceof HeaderBlock)) {
         for (let i = 0; i < blocks.length; i++) {
             if (blocks[i] === null) {
                 ghostIndex = i;
@@ -179,7 +185,7 @@ function drawBlocks() {
             (compoundHover.getHeightInLines() - 1) * LINE_HEIGHT + 10,
             6
         );
-    } else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT) {
+    } else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT && draggingBlock) {
         let gy = CODE_Y_START + ghostIndex * LINE_HEIGHT;
         noStroke();
         fill(255, 255, 255, 50);
@@ -469,6 +475,11 @@ function loadNextProblem(nextProblem) {
 
     // Make sure blocks are properly arranged
     shiftBlocksUp();
+}
+
+// Function to load the shop between problems
+function loadShop() {
+    console.log("nothing yet");
 }
 
 function saveLayout() {
@@ -781,19 +792,23 @@ class ForLoopBlock extends CompoundBlock {
         text(")", offset, this.y + 20);
     }
 
-    evaluate_cond(x) {
-        const parts = this.cond.trim().split(/\s+/);
-        let cond = parts[0];
-        let val = parts[1];
-        return eval(`x ${cond} ${val}`);
-    }
-
     evaluate(x) {
         try {
             // let bodyCode = this.children.map(b => b.text).join("\n");
             //let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
             //return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
-            for (let i = this.init; this.evaluate_cond(i); i += this.inc) {
+
+            const initBlock = this.getHeaderBlock(InitBlock);
+            const condBlock = this.getHeaderBlock(ConditionBlock);
+            const incBlock = this.getHeaderBlock(IncBlock);
+
+            if (!initBlock || !condBlock || !incBlock) {
+                console.warn("Missing header blocks in for-loop");
+                return x;
+            }
+
+            for (let i = initBlock.value; eval(condBlock.text); i += incBlock.value) {
+                console.log(i);
                 for (let child of this.children) {
                     x = child.evaluate(x);
                 }
@@ -1032,8 +1047,13 @@ function deserialize(obj) {
 }
 
 class InitBlock extends HeaderBlock {
-    constructor(text, x, y) {
-        super(text, x, y);
+    constructor(value, x, y) {
+        super(`let i = ${value}`, x, y);
+        this.value = value;
+    }
+
+    getValue() {
+
     }
 
     serialize() {
@@ -1042,11 +1062,17 @@ class InitBlock extends HeaderBlock {
 }
 
 class IncBlock extends HeaderBlock {
-    constructor(text, x, y) {
-        super(text, x, y);
+    constructor(value, x, y) {
+        if (value >= 0) {
+            super(`i += ${value}`, x, y);
+        } else {
+            super(`i -= ${-value}`, x, y);
+        }
+        this.value = value
     }
 
     serialize() {
         return { type: "inc", text: this.text };
     }
 }
+
