@@ -85,6 +85,7 @@ class Problem {
       title: this.title,
       description: this.description,
       initialValue: this.initialValue,
+      targetValue: this.targetValue,
       predefinedBlocks,
       availableBlocks,
       maxBlockCounts: { ...this.maxBlockCounts }

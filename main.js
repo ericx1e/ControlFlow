@@ -5,7 +5,8 @@
 const NUM_LINES = 40;
 const LINE_HEIGHT = 35;
 const CODE_X = 100;
-const CODE_Y_START = 50;
+const CODE_Y_START = 100;
+const TITLE_Y_START = 50
 const CODE_WIDTH = 600;
 const SIDEBAR_X = 820; // Dont really need this lol
 const SIDEBAR_BLOCK_SPACING = 80;
@@ -19,6 +20,9 @@ let allBlocks = [];
 let draggingBlock = null;
 let ghostIndex = -1;
 let compoundHover = null;
+let title = ""
+let desc = ""
+let target = 0
 
 function setup() {
     createCanvas(1000, 600);
@@ -62,6 +66,7 @@ function draw() {
     drawSidebar();
     drawBlocks();
     drawButtons();
+    drawTarget()
 
     if (draggingBlock) {
         draggingBlock.x = mouseX + draggingBlock.offsetX;
@@ -170,6 +175,24 @@ function drawSidebar() {
     fill(255);
     noStroke();
     text("Available Blocks", SIDEBAR_X, 50);
+}
+
+function drawTarget() {
+    
+    
+    // Draw problem title
+    fill(255);
+    textSize(20);
+    text(title, CODE_X  , TITLE_Y_START - 15);
+    
+    
+    // Draw target value info
+    textSize(20);
+    fill(255, 220, 150);
+    text(`Target: ${target}`, CODE_X, TITLE_Y_START + 10);
+    
+    // Reset text size
+    textSize(16);
 }
 
 function drawBlocks() {
@@ -467,6 +490,10 @@ function loadNextProblem(nextProblem) {
     // Update available blocks
     console.log(gameState.availableBlocks)
     allBlocks = gameState.availableBlocks;
+
+    title = gameState.problem.title;
+    desc = gameState.problem.description;
+    target = gameState.problem.targetValue;
 
     // Fill the rest with nulls
     while (blocks.length < NUM_LINES) {
