@@ -338,10 +338,20 @@ class ProblemManager {
       8   // target value
     );
     problem1.addAvailableBlock(new CodeBlock("x *= 2;", SIDEBAR_X, CODE_Y_START));
+
+    // Test blocks
     problem1.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START + 40));
+    problem1.addAvailableBlock(new WhileBlock(SIDEBAR_X, CODE_Y_START + 40));
+    problem1.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 40));
     problem1.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 80));
     problem1.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
     problem1.addAvailableBlock(new ConditionBlock('i < 10', SIDEBAR_X, CODE_Y_START + 160));
+    problem1.addAvailableBlock(new ConditionBlock('i <= 5', SIDEBAR_X, CODE_Y_START + 180));
+    problem1.addAvailableBlock(new ConditionBlock('i <= 5', SIDEBAR_X, CODE_Y_START + 200));
+    problem1.addAvailableBlock(new ConditionBlock('x < 5', SIDEBAR_X, CODE_Y_START + 220));
+    problem1.addAvailableBlock(new IfElseBlock('x < 5', SIDEBAR_X, CODE_Y_START + 220));
+    problem1.addAvailableBlock(new PrintBlock(SIDEBAR_X, CODE_Y_START + 220));
+
 
     manager.addProblem(problem1);
 
