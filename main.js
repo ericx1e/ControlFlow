@@ -361,13 +361,28 @@ function drawBlocks() {
     }
     if (compoundHover && draggingBlock) {
         fill(255, 255, 0, 50);
-        rect(
-            compoundHover.x + 20,
-            compoundHover.y + compoundHover.h,
-            compoundHover.w - 40,
-            (compoundHover.getHeightInLines() - 1) * LINE_HEIGHT + 10,
-            6
-        );
+
+        if (compoundHover instanceof IfElseBlock) {
+            // Determine if mouse is hovering over if or else section
+            const ifTop = compoundHover.ifSection.y;
+            const ifHeight = compoundHover.ifSection.getHeightInLines() * LINE_HEIGHT + 10;
+            const elseTop = compoundHover.elseSection.y;
+            const elseHeight = compoundHover.elseSection.getHeightInLines() * LINE_HEIGHT + 10;
+
+            if (mouseY > ifTop && mouseY < ifTop + ifHeight) {
+                rect(compoundHover.ifSection.x, ifTop, 240, ifHeight, 6);
+            } else if (mouseY > elseTop && mouseY < elseTop + elseHeight) {
+                rect(compoundHover.elseSection.x, elseTop, 240, elseHeight, 6);
+            }
+        } else {
+            rect(
+                compoundHover.x + 20,
+                compoundHover.y + compoundHover.h,
+                compoundHover.w - 40,
+                (compoundHover.getHeightInLines() - 1) * LINE_HEIGHT + 10,
+                6
+            );
+        }
     } else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT && draggingBlock) {
         let gy = CODE_Y_START + ghostIndex * LINE_HEIGHT;
         noStroke();
@@ -1160,7 +1175,7 @@ class ForLoopBlock extends CompoundBlock {
             }
 
             for (let i = initBlock.value; eval(condBlock.text); i += incBlock.value) {
-                console.log(i);
+                // console.log(i);
                 for (let child of this.children) {
                     x = child.evaluate(x);
                 }
@@ -1186,7 +1201,7 @@ class ForLoopBlock extends CompoundBlock {
 class IfElseBlock extends CompoundBlock {
     constructor(x, y) {
         super("if (...) { } else { }", x, y);
-        this.cond = "x % 2 === 0";
+        // this.cond = "x % 2 === 0";
         this.ifSection = new SectionBlock("if", x, y + 35);
         this.elseSection = new SectionBlock("else", x, y + 100);
         this.baseWidth = 280;
@@ -1205,49 +1220,87 @@ class IfElseBlock extends CompoundBlock {
     }
 
     getHeightInLines() {
-        return 1 + this.ifSection.getHeightInLines() + this.elseSection.getHeightInLines();
+        return 2 + this.ifSection.getHeightInLines() + this.elseSection.getHeightInLines();
+    }
+
+    canAcceptHeader(mx, my, block) {
+        return mx > this.x && mx < this.x + this.w &&
+            my > this.y && my < this.y + this.h &&
+            block instanceof ConditionBlock &&
+            !this.hasHeaderBlock(ConditionBlock);
+    }
+
+    acceptHeader(block) {
+        if (block instanceof ConditionBlock && !this.hasHeaderBlock(ConditionBlock)) {
+            this.addHeaderBlock(block);
+            return true;
+        }
+        return false;
     }
 
     draw(isDragging = false) {
         noStroke();
+
+        // Draw IF container
         fill(50, 50, 50, 150);
         rect(this.x + 3, this.y + 3, this.w, this.h, 6);
         fill(isDragging ? '#559' : '#458');
         rect(this.x, this.y, this.w, this.h, 6);
-        fill(255);
-        text(this.text, this.x + 10, this.y + 20);
 
+        // Draw IF header
+        fill(255);
+        let offset = this.x + 10;
+        text("if (", offset, this.y + 20);
+        offset += textWidth("if (");
+
+        const condBlock = this.getHeaderBlock(ConditionBlock);
+        if (condBlock) {
+            condBlock.x = offset;
+            condBlock.y = this.y + 2;
+            condBlock.draw();
+            offset += condBlock.w + 5;
+        } else {
+            text("?", offset, this.y + 20);
+            offset += 20;
+        }
+
+        text(") {", offset, this.y + 20);
+
+        // IF section
         this.ifSection.x = this.x + 20;
         this.ifSection.y = this.y + this.h;
         this.ifSection.draw();
 
+        // ELSE block header
+        const elseY = this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10;
+        fill(30);
+        rect(this.x, elseY, this.w, this.h, 6);
+        fill(255);
+        text("else {", this.x + 10, elseY + 20);
+
+        // ELSE section
         this.elseSection.x = this.x + 20;
-        this.elseSection.y = this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10;
+        this.elseSection.y = elseY + this.h;
         this.elseSection.draw();
     }
 
-    evaluate_cond(x) {
-        try {
-            // Replace all occurrences of 'x' with the actual value
-            const conditionWithX = this.cond.replace(/\bx\b/g, x);
-
-            // Use eval to evaluate the condition directly
-            return eval(conditionWithX);
-        } catch (e) {
-            console.error("Error evaluating condition:", e, "Condition:", this.cond);
-            return false;
-        }
-    }
 
     evaluate(x) {
         try {
-            const condVal = new Function("x", `return ${this.cond};`)(x);
-            const section = condVal ? this.ifSection : this.elseSection;
+            const condBlock = this.getHeaderBlock(ConditionBlock);
+            if (!condBlock) {
+                console.warn("Missing ConditionBlock in if/else block");
+                return x;
+            }
+
+            const conditionMet = condBlock.evaluateCondition(x);
+            const section = conditionMet ? this.ifSection : this.elseSection;
+
             for (let child of section.children) {
                 x = child.evaluate(x);
             }
         } catch (e) {
-            console.error("IfElse Error:", e);
+            console.error("IfElseBlock Error:", e);
         }
         return x;
     }
@@ -1271,8 +1324,8 @@ class SectionBlock {
     }
 
     canAcceptChild(mx, my) {
-        const top = this.y + 20;
-        const bottom = top + this.getHeightInLines() * LINE_HEIGHT + 30;
+        const top = this.y;
+        const bottom = top + this.getHeightInLines() * LINE_HEIGHT + 10;
         return mx > this.x && mx < this.x + 240 && my > top && my < bottom;
     }
 
@@ -1281,16 +1334,16 @@ class SectionBlock {
     }
 
     getHeightInLines() {
-        return 1 + this.children.reduce((sum, c) => sum + c.getHeightInLines(), 0);
+        return 0 + this.children.reduce((sum, c) => sum + c.getHeightInLines(), 0);
     }
 
     draw() {
         fill(70);
-        text(this.label, this.x + 5, this.y + 15);
+        // text(this.label, this.x + 5, this.y + 15);
         fill(50, 50, 50, 150);
-        rect(this.x, this.y + 20, 240, this.getHeightInLines() * LINE_HEIGHT + 10, 6);
+        rect(this.x, this.y, 240, this.getHeightInLines() * LINE_HEIGHT + 10, 6);
 
-        let childY = this.y + 30;
+        let childY = this.y + 10;
         for (let child of this.children) {
             child.x = this.x + 10;
             child.y = childY;
@@ -1322,11 +1375,28 @@ class WhileBlock extends CompoundBlock {
             //while (new Function("x", `return ${this.cond}`)(x)) {
             //for (let child of this.children) x = child.evaluate(x);
             //}
-            while (this.evaluate_cond(x)) {
+
+            const condBlock = this.getHeaderBlock(ConditionBlock);
+
+            if (!condBlock) {
+                console.warn("Missing header blocks in while-loop");
+                return x;
+            }
+
+            let maxIterations = 10000;
+            let count = 0;
+
+            while (condBlock.evaluateCondition(x) && count++ < maxIterations) {
+                // console.log(x)
                 for (let child of this.children) {
                     x = child.evaluate(x);
                 }
             }
+
+            if (count >= maxIterations) {
+                console.warn("Max iterations reached")
+            }
+
             return x;
         } catch (e) {
             console.error("While Error:", e);
@@ -1362,6 +1432,15 @@ class PrintBlock extends CodeBlock {
 class ConditionBlock extends HeaderBlock {
     constructor(text, x, y) {
         super(text, x, y);
+    }
+
+    evaluateCondition(x) {
+        try {
+            return new Function("x", `return (${this.text});`)(x);
+        } catch (e) {
+            console.error("ConditionBlock Error:", e, "text:", this.text);
+            return false;
+        }
     }
 
     serialize() {
