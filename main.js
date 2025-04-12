@@ -5,7 +5,8 @@
 const NUM_LINES = 40;
 const LINE_HEIGHT = 35;
 const CODE_X = 100;
-const CODE_Y_START = 50;
+const CODE_Y_START = 100;
+const TITLE_Y_START = 50
 const CODE_WIDTH = 600;
 const SIDEBAR_X = 820; // Dont really need this lol
 const SIDEBAR_BLOCK_SPACING = 80;
@@ -19,17 +20,25 @@ let allBlocks = [];
 let draggingBlock = null;
 let ghostIndex = -1;
 let compoundHover = null;
+let title = ""
+let desc = ""
+let target = 0
+let showPopup = false;
+let popupType = ""; // "success" or "failure"
+let popupTimer = 0;
+let popupDuration = 2000; // milliseconds for failure popup
 
 function setup() {
     createCanvas(1000, 600);
     textSize(16);
     textFont('monospace');
     // Initialize problem manager with default problems
-    problemManager = ProblemManager.createDefaultProblems();
+    problemManager = ProblemManager.setProblems();
 
     // Load or create user
     currentUser = User.load() || new User('user1', 'Player 1');
-    console.log(currentUser.currentProblem)
+
+    shop = Shop.initializeDefaultShop();
 
     // Start the first problem if no current problem
     // if (!currentUser.currentProblem) {
@@ -63,12 +72,15 @@ function draw() {
     drawSidebar();
     drawBlocks();
     drawButtons();
+    drawTarget()
 
     if (draggingBlock) {
         draggingBlock.x = mouseX + draggingBlock.offsetX;
         draggingBlock.y = mouseY + draggingBlock.offsetY;
         draggingBlock.draw(true);
     }
+
+    drawPopup()
 }
 
 function drawCodeLines() {
@@ -173,6 +185,24 @@ function drawSidebar() {
     text("Available Blocks", SIDEBAR_X, 50);
 }
 
+function drawTarget() {
+    
+    
+    // Draw problem title
+    fill(255);
+    textSize(20);
+    text(title, CODE_X  , TITLE_Y_START - 15);
+    
+    
+    // Draw target value info
+    textSize(20);
+    fill(255, 220, 150);
+    text(`Target: ${target}`, CODE_X, TITLE_Y_START + 10);
+    
+    // Reset text size
+    textSize(16);
+}
+
 function drawBlocks() {
     for (let block of allBlocks) {
         if (block) block.draw();
@@ -221,7 +251,105 @@ function drawButtons() {
     // text("Load", SIDEBAR_X + 20, BUTTON_Y_START + BUTTON_SPACING_Y + 20);
 }
 
+// Add this function to draw the popup
+function drawPopup() {
+    if (!showPopup) return;
+    
+    // Overlay background
+    fill(0, 0, 0, 150);
+    rect(0, 0, width, height);
+    
+    // Popup container
+    let popupWidth = 400;
+    let popupHeight = popupType === "success" ? 200 : 150;
+    let popupX = width / 2 - popupWidth / 2;
+    let popupY = height / 2 - popupHeight / 2;
+    
+    // Shadow
+    fill(30, 30, 30, 200);
+    rect(popupX + 5, popupY + 5, popupWidth, popupHeight, 10);
+    
+    // Main popup
+    if (popupType === "success") {
+      fill(70, 120, 60); // Green for success
+    } else {
+      fill(150, 60, 60); // Red for failure
+    }
+    rect(popupX, popupY, popupWidth, popupHeight, 10);
+    
+    // Text
+    fill(255);
+    textSize(24);
+    textAlign(CENTER, CENTER);
+    
+    if (popupType === "success") {
+      text("Level Complete!", width / 2, popupY + 50);
+      
+      // Next level button
+      let buttonX = width / 2 - 75;
+      let buttonY = popupY + 100;
+      let buttonWidth = 150;
+      let buttonHeight = 50;
+      
+      // Button shadow
+      fill(30, 30, 30, 200);
+      rect(buttonX + 3, buttonY + 3, buttonWidth, buttonHeight, 5);
+      
+      // Button background
+      fill(100, 170, 80);
+      if (mouseX > buttonX && mouseX < buttonX + buttonWidth && 
+          mouseY > buttonY && mouseY < buttonY + buttonHeight) {
+        fill(120, 200, 100); // Highlight on hover
+        if (mouseIsPressed) {
+          fill(80, 140, 60); // Darker when pressed
+        }
+      }
+      rect(buttonX, buttonY, buttonWidth, buttonHeight, 5);
+      
+      // Button text
+      fill(255);
+      textSize(18);
+      text("Next Level", width / 2, buttonY + 25);
+    } else {
+      text("Try Again!", width / 2, popupY + 75);
+      
+      // Auto-hide failure popup after duration
+      if (millis() - popupTimer > popupDuration) {
+        showPopup = false;
+      }
+    }
+    
+    // Reset text alignment for other text
+    textAlign(LEFT, BASELINE);
+    textSize(16);
+}
+
 function mousePressed() {
+    // Check if clicking on the next level button in success popup
+    if (showPopup && popupType === "success") {
+        let buttonX = width / 2 - 75;
+        let buttonY = height / 2 - 200 / 2 + 100;
+        let buttonWidth = 150;
+        let buttonHeight = 50;
+        
+        if (mouseX > buttonX && mouseX < buttonX + buttonWidth && 
+            mouseY > buttonY && mouseY < buttonY + buttonHeight) {
+        // Hide popup and load next level
+        showPopup = false;
+        const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
+        if (nextProblem) {
+            loadNextProblem(nextProblem);
+        } else {
+            console.log("Congratulations! You've completed all problems!");
+            // Could show a game completion popup here
+        }
+        return; // Return early to prevent other interactions while popup is active
+        }
+    }
+    
+    // Only allow other interactions if popup is not showing
+    if (showPopup) return;
+    
     if (mouseX > SIDEBAR_X && mouseX < SIDEBAR_X + BUTTON_WIDTH &&
         mouseY > BUTTON_Y_START && mouseY < BUTTON_Y_START + BUTTON_HEIGHT)
         return runCode();
@@ -452,20 +580,26 @@ function runCode() {
     if (result.isCorrect) {
         // Handle problem completion
         console.log("Problem solved!");
+        showPopup = true;
+        popupType = "success";
 
         // Save progress
         currentUser.save();
 
         // Offer to move to the next problem
-        const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
-        if (nextProblem) {
-            // TODO: Show completion dialog and offer next problem
-            loadNextProblem(nextProblem);
-        } else {
-            // TODO: Show game completion
-            console.log("Congratulations! You've completed all problems!");
-        }
+        // const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
+        // if (nextProblem) {
+        //     // TODO: Show completion dialog and offer next problem
+        //     loadShop();
+        //     loadNextProblem(nextProblem);
+        // } else {
+        //     // TODO: Show game completion
+        //     console.log("Congratulations! You've completed all problems!");
+        // }
     } else {
+        showPopup = true;
+        popupType = "failure";
+        popupTimer = millis(); // Start timer for auto-hide
         console.log(`Attempt ${result.attemptsMade}: Not quite right. Try again!`);
     }
 }
@@ -484,6 +618,10 @@ function loadNextProblem(nextProblem) {
     console.log(gameState.availableBlocks)
     allBlocks = gameState.availableBlocks;
 
+    title = gameState.problem.title;
+    desc = gameState.problem.description;
+    target = gameState.problem.targetValue;
+
     // Fill the rest with nulls
     while (blocks.length < NUM_LINES) {
         blocks.push(null);
@@ -495,7 +633,9 @@ function loadNextProblem(nextProblem) {
 
 // Function to load the shop between problems
 function loadShop() {
-    console.log("nothing yet");
+    let contents = shop.contents;
+    console.log(contents['forblock']);
+    // Insert code to draw shop
 }
 
 function saveLayout() {

@@ -1,0 +1,99 @@
+{
+    "problems": [
+      {
+        "id": "p1",
+        "title": "Simple Addition",
+        "description": "Add 1 to the input value to reach the target.",
+        "initialValue": 1,
+        "targetValue": 2,
+        "availableBlocks": [
+          {
+            "type": "code",
+            "text": "x += 1;"
+          }
+        ]
+      },
+      {
+        "id": "p2",
+        "title": "For Loop Challenge",
+        "description": "Use a for loop to transform the input.",
+        "initialValue": 10,
+        "targetValue": 2,
+        "availableBlocks": [
+          {
+            "type": "for",
+            "headerBlocks": {
+              "InitBlock": {
+                "type": "init",
+                "text": "let i = 0"
+              },
+              "ConditionBlock": {
+                "type": "condition",
+                "text": "i < 3"
+              },
+              "IncBlock": {
+                "type": "inc",
+                "text": "i++"
+              }
+            }
+          },
+          {
+            "type": "code",
+            "text": "x -= 2;"
+          }
+        ]
+      },
+      {
+        "id": "p3",
+        "title": "Division with While",
+        "description": "Use division and a while loop to reach the target value.",
+        "initialValue": 10,
+        "targetValue": 0.5,
+        "availableBlocks": [
+          {
+            "type": "code",
+            "text": "x /= 2;"
+          },
+          {
+            "type": "while",
+            "headerBlocks": {
+              "ConditionBlock": {
+                "type": "condition",
+                "text": "x > 1"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "p4",
+        "title": "Points Counter",
+        "description": "Use loops to accumulate points based on the input value.",
+        "initialValue": -2,
+        "targetValue": -2,
+        "availableBlocks": [
+          {
+            "type": "code",
+            "text": "points += x;"
+          },
+          {
+            "type": "for",
+            "headerBlocks": {
+              "InitBlock": {
+                "type": "init",
+                "text": "let i = 0"
+              },
+              "ConditionBlock": {
+                "type": "condition",
+                "text": "i < 5"
+              },
+              "IncBlock": {
+                "type": "inc",
+                "text": "i += 2"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
