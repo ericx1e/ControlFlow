@@ -1,5 +1,6 @@
 // p5.js Game: Balatro-inspired Code Roguelike
 // Features: Drag-and-drop code blocks, Compound loops, Dynamic layout, Save/load, Interpreter
+// import { Problem, User, ProblemManager } from './states.js';
 
 const NUM_LINES = 40;
 const LINE_HEIGHT = 35;
@@ -23,14 +24,33 @@ function setup() {
     createCanvas(1000, 600);
     textSize(16);
     textFont('monospace');
-    for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
-    allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100));
-    allBlocks.push(new CodeBlock("x *= 2;", SIDEBAR_X, 100 + SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new ForLoopBlock(SIDEBAR_X, 100 + 2 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100 + 3 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new IfElseBlock(CODE_X + CODE_WIDTH + 10, 100 + 4 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new WhileBlock(CODE_X + CODE_WIDTH + 10, 100 + 5 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new PrintBlock(CODE_X + CODE_WIDTH + 10, 100 + 6 * SIDEBAR_BLOCK_SPACING));
+     // Initialize problem manager with default problems
+    problemManager = ProblemManager.createDefaultProblems();
+    
+    // Load or create user
+    currentUser = User.load() || new User('user1', 'Player 1');
+    
+    // Start the first problem if no current problem
+    if (!currentUser.currentProblem) {
+        const firstProblem = problemManager.getProblem(problemManager.problemOrder[0]);
+        const gameState = currentUser.startProblem(firstProblem);
+        
+        // Set up game state
+        blocks = gameState.blocks;
+        allBlocks = gameState.availableBlocks;
+    }
+
+    if (!blocks || blocks.length === 0) {
+        for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
+      }
+    // for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
+    // allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100));
+    // allBlocks.push(new CodeBlock("x *= 2;", SIDEBAR_X, 100 + SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new ForLoopBlock(SIDEBAR_X, 100 + 2 * SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100 + 3 * SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new IfElseBlock(CODE_X + CODE_WIDTH + 10, 100 + 4 * SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new WhileBlock(CODE_X + CODE_WIDTH + 10, 100 + 5 * SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new PrintBlock(CODE_X + CODE_WIDTH + 10, 100 + 6 * SIDEBAR_BLOCK_SPACING));
 
 }
 
@@ -309,13 +329,38 @@ function flattenBlocks(arr) {
     }, []);
 }
 
+// function runCode() {
+//     let x = 1;
+//     for (let b of blocks) {
+//         if (b) x = b.evaluate(x);
+//     }
+//     console.log("Final x:", x);
+// }
+
 function runCode() {
-    let x = 1;
-    for (let b of blocks) {
-        if (b) x = b.evaluate(x);
+    const problem = problemManager.getProblem(currentUser.currentProblem);
+    const result = currentUser.submitSolution(blocks, problem);
+    
+    console.log("Final x:", result.result);
+    
+    if (result.isCorrect) {
+      // Handle problem completion
+      console.log("Problem solved!");
+      
+      // Save progress
+      currentUser.save();
+      
+      // Offer to move to the next problem
+      const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
+      if (nextProblem) {
+        // TODO: Show completion dialog and offer next problem
+      } else {
+        // TODO: Show game completion
+      }
+    } else {
+      console.log(`Attempt ${result.attemptsMade}: Not quite right. Try again!`);
     }
-    console.log("Final x:", x);
-}
+  }
 
 function saveLayout() {
     const layout = blocks.map(b => b ? b.serialize() : null);

@@ -335,7 +335,7 @@ class Problem {
         4,  // initial value
         8   // target value
       );
-      problem1.addAvailableBlock(new CodeBlock("x *= 2;", CODE_X, CODE_Y_START));
+      problem1.addAvailableBlock(new CodeBlock("x *= 2;", SIDEBAR_X, CODE_Y_START));
       manager.addProblem(problem1);
       
       // Problem 2: Reach 10 with addition and multiplication
@@ -346,8 +346,8 @@ class Problem {
         2,  // initial value
         10  // target value
       );
-      problem2.addAvailableBlock(new CodeBlock("x += 2;", CODE_X, CODE_Y_START));
-      problem2.addAvailableBlock(new CodeBlock("x *= 2;", CODE_X, CODE_Y_START));
+      problem2.addAvailableBlock(new CodeBlock("x += 2;", SIDEBAR_X, CODE_Y_START));
+      problem2.addAvailableBlock(new CodeBlock("x *= 2;", SIDEBAR_X, CODE_Y_START));
       manager.addProblem(problem2);
       
       // Problem 3: Use a for loop to calculate 2^4
@@ -358,8 +358,8 @@ class Problem {
         1,  // initial value
         16  // target value
       );
-      problem3.addAvailableBlock(new ForLoopBlock(CODE_X, CODE_Y_START));
-      problem3.addAvailableBlock(new CodeBlock("x *= 2;", CODE_X, CODE_Y_START));
+      problem3.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START));
+      problem3.addAvailableBlock(new CodeBlock("x *= 2;", SIDEBAR_X, CODE_Y_START));
       manager.addProblem(problem3);
       
       // Problem 4: Use if-else to handle odd/even numbers
@@ -370,9 +370,9 @@ class Problem {
         5,  // initial value
         12  // target value
       );
-      problem4.addAvailableBlock(new IfElseBlock(CODE_X, CODE_Y_START));
-      problem4.addAvailableBlock(new CodeBlock("x += 1;", CODE_X, CODE_Y_START));
-      problem4.addAvailableBlock(new CodeBlock("x *= 2;", CODE_X, CODE_Y_START));
+      problem4.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START));
+      problem4.addAvailableBlock(new CodeBlock("x += 1;", SIDEBAR_X, CODE_Y_START));
+      problem4.addAvailableBlock(new CodeBlock("x *= 2;", SIDEBAR_X, CODE_Y_START));
       manager.addProblem(problem4);
       
       // Problem 5: Use a while loop to divide by 2 until below 10
@@ -383,8 +383,8 @@ class Problem {
         80,  // initial value
         5   // target value
       );
-      problem5.addAvailableBlock(new WhileBlock(CODE_X, CODE_Y_START));
-      problem5.addAvailableBlock(new CodeBlock("x /= 2;", CODE_X, CODE_Y_START));
+      problem5.addAvailableBlock(new WhileBlock(SIDEBAR_X, CODE_Y_START));
+      problem5.addAvailableBlock(new CodeBlock("x /= 2;", SIDEBAR_X, CODE_Y_START));
       manager.addProblem(problem5);
       
       return manager;
@@ -395,3 +395,7 @@ class Problem {
   function saveLayout(blocks) {
     return JSON.stringify(blocks.map(b => b ? b.serialize() : null));
   }
+
+// window.Problem = Problem;
+// window.User = User;
+// window.ProblemManager = ProblemManager;
