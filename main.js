@@ -787,11 +787,11 @@ class ForLoopBlock extends CompoundBlock {
         text(")", offset, this.y + 20);
     }
 
-    evaluate_cond(x) {
-        const parts = this.cond.trim().split(/\s+/);
+    evaluate_cond(condTxt, x) {
+        const parts = condTxt.trim().split(/\s+/);
         let cond = parts[0];
         let val = parts[1];
-        return eval(`x ${cond} ${val}`);
+        return eval(`${x} ${cond} ${val}`);
     }
 
     evaluate(x) {
@@ -799,7 +799,17 @@ class ForLoopBlock extends CompoundBlock {
             // let bodyCode = this.children.map(b => b.text).join("\n");
             //let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
             //return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
-            for (let i = this.init; this.evaluate_cond(i); i += this.inc) {
+
+            const initBlock = this.getHeaderBlock(InitBlock);
+            const condBlock = this.getHeaderBlock(ConditionBlock);
+            const incBlock = this.getHeaderBlock(IncBlock);
+
+            if (!initBlock || !condBlock || !incBlock) {
+                console.warn("Missing header blocks in for-loop");
+                return x;
+            }
+
+            for (let i = initBlock.value; this.evaluate_cond(condBlock.text, i); i += incBlock.value) {
                 for (let child of this.children) {
                     x = child.evaluate(x);
                 }
@@ -1038,8 +1048,13 @@ function deserialize(obj) {
 }
 
 class InitBlock extends HeaderBlock {
-    constructor(text, x, y) {
-        super(text, x, y);
+    constructor(value, x, y) {
+        super(`let i = ${value}`, x, y);
+        this.value = value;
+    }
+
+    getValue() {
+
     }
 
     serialize() {
@@ -1048,8 +1063,13 @@ class InitBlock extends HeaderBlock {
 }
 
 class IncBlock extends HeaderBlock {
-    constructor(text, x, y) {
-        super(text, x, y);
+    constructor(value, x, y) {
+        if (value >= 0) {
+            super(`i += ${value}`, x, y);
+        } else {
+            super(`i -= ${-value}`, x, y);
+        }
+        this.value = value
     }
 
     serialize() {
