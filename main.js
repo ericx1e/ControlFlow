@@ -101,8 +101,14 @@ function drawCodeLines() {
             compoundHover = findDeepestCompoundHover(blocks, mouseX, mouseY);
 
             ghostIndex = -1;
-        } else if (ghostIndex === -1 && block.contains(mouseX, mouseY)) {
-            ghostIndex = i;
+        } else if (ghostIndex === -1 && block.contains(mouseX, mouseY) && !block.isLocked) {
+            if (draggingBlock instanceof HeaderBlock) {
+                if (blocks[i] instanceof CompoundBlock && blocks[i].canAcceptHeader(mouseX, mouseY, draggingBlock)) {
+                    ghostIndex = i;
+                }
+            } else {
+                ghostIndex = i;
+            }
         }
 
         // Draw line numbers for span
@@ -126,7 +132,7 @@ function drawCodeLines() {
         text(`${currentLine + 1}:`, 50, currentY - 10);
     }
 
-    if (ghostIndex === -1 && draggingBlock) {
+    if (ghostIndex === -1 && draggingBlock && !(draggingBlock instanceof HeaderBlock)) {
         for (let i = 0; i < blocks.length; i++) {
             if (blocks[i] === null) {
                 ghostIndex = i;
@@ -180,7 +186,7 @@ function drawBlocks() {
             (compoundHover.getHeightInLines() - 1) * LINE_HEIGHT + 10,
             6
         );
-    } else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT) {
+    } else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT && draggingBlock) {
         let gy = CODE_Y_START + ghostIndex * LINE_HEIGHT;
         noStroke();
         fill(255, 255, 255, 50);
