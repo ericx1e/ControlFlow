@@ -31,6 +31,8 @@ function setup() {
     currentUser = User.load() || new User('user1', 'Player 1');
     console.log(currentUser.currentProblem)
 
+    shop = Shop.initializeDefaultShop();
+
     // Start the first problem if no current problem
     // if (!currentUser.currentProblem) {
     const firstProblem = problemManager.getProblem(problemManager.problemOrder[0]);
@@ -445,6 +447,7 @@ function runCode() {
         const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
         if (nextProblem) {
             // TODO: Show completion dialog and offer next problem
+            loadShop();
             loadNextProblem(nextProblem);
         } else {
             // TODO: Show game completion
@@ -480,7 +483,9 @@ function loadNextProblem(nextProblem) {
 
 // Function to load the shop between problems
 function loadShop() {
-    console.log("nothing yet");
+    let contents = shop.contents;
+    console.log(contents['forblock']);
+    // Insert code to draw shop
 }
 
 function saveLayout() {

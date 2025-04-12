@@ -406,3 +406,27 @@ function saveLayout(blocks) {
 // window.Problem = Problem;
 // window.User = User;
 // window.ProblemManager = ProblemManager;
+
+class Shop {
+  
+  constructor(contents) {
+    // Map productType to price
+    this.contents = contents;
+  }
+
+  // Buy the item. return -1 on failure, remaining points on success
+  buy(score, productType, quantity = 1) {
+    if (!contents[productType] || score < quantity * contents[productType]) {
+      return -1;
+    }
+
+    return score - quantity * contents[productType]
+  }
+
+  static initializeDefaultShop() {
+    const defaultShop = new Shop();
+    let defaultContents = {'forblock':5};
+    defaultShop.contents = defaultContents;
+    return defaultShop;
+  }
+}
