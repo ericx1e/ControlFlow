@@ -1,5 +1,6 @@
 // p5.js Game: Balatro-inspired Code Roguelike
 // Features: Drag-and-drop code blocks, Compound loops, Dynamic layout, Save/load, Interpreter
+// import { Problem, User, ProblemManager } from './states.js';
 
 const NUM_LINES = 40;
 const LINE_HEIGHT = 35;
@@ -23,19 +24,36 @@ function setup() {
     createCanvas(1000, 600);
     textSize(16);
     textFont('monospace');
-    for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
-    allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100));
-    allBlocks.push(new CodeBlock("x *= 2;", SIDEBAR_X, 100 + SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new ForLoopBlock(SIDEBAR_X, 100 + 2 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100 + 3 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new IfElseBlock(CODE_X + CODE_WIDTH + 10, 100 + 4 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new WhileBlock(CODE_X + CODE_WIDTH + 10, 100 + 5 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new PrintBlock(CODE_X + CODE_WIDTH + 10, 100 + 6 * SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new ConditionBlock("x % 2 == 0", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new ConditionBlock("x < 10", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new ConditionBlock("i < 5", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new InitBlock("let i = 0", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
-    allBlocks.push(new IncBlock("i++", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
+    // Initialize problem manager with default problems
+    problemManager = ProblemManager.createDefaultProblems();
+
+    // Load or create user
+    currentUser = User.load() || new User('user1', 'Player 1');
+    console.log(currentUser.currentProblem)
+
+    // Start the first problem if no current problem
+    if (!currentUser.currentProblem) {
+        const problem = problemManager.getProblem(problemManager.problemOrder[0]);
+        const gameState = currentUser.startProblem(firstProblem);
+    }
+    const problem = problemManager.getProblem(currentUser.currentProblem);
+    const gameState = currentUser.startProblem(problem)
+    // Set up game state
+    blocks.push(new CodeBlock("x = " + gameState.problem.initialValue, CODE_X, CODE_Y_START, true))
+    blocks.push(...gameState.blocks);
+    allBlocks = gameState.availableBlocks;
+
+    if (!blocks || blocks.length === 0) {
+        for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
+    }
+    // for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
+    // allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100));
+    // allBlocks.push(new CodeBlock("x *= 2;", SIDEBAR_X, 100 + SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new ForLoopBlock(SIDEBAR_X, 100 + 2 * SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new CodeBlock("x += 1;", SIDEBAR_X, 100 + 3 * SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new IfElseBlock(CODE_X + CODE_WIDTH + 10, 100 + 4 * SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new WhileBlock(CODE_X + CODE_WIDTH + 10, 100 + 5 * SIDEBAR_BLOCK_SPACING));
+    // allBlocks.push(new PrintBlock(CODE_X + CODE_WIDTH + 10, 100 + 6 * SIDEBAR_BLOCK_SPACING));
 
 }
 
@@ -189,7 +207,7 @@ function mousePressed() {
 
     const targetBlock = findBlockAt(mouseX, mouseY, blocks.concat(allBlocks));
 
-    if (targetBlock) {
+    if (targetBlock && !targetBlock.isLocked) {
         draggingBlock = targetBlock;
         draggingBlock.offsetX = targetBlock.x - mouseX;
         draggingBlock.offsetY = targetBlock.y - mouseY;
@@ -396,12 +414,61 @@ function flattenBlocks(arr) {
     }, []);
 }
 
+// function runCode() {
+//     let x = 1;
+//     for (let b of blocks) {
+//         if (b) x = b.evaluate(x);
+//     }
+//     console.log("Final x:", x);
+// }
+
 function runCode() {
-    let x = 1;
-    for (let b of blocks) {
-        if (b) x = b.evaluate(x);
+    const problem = problemManager.getProblem(currentUser.currentProblem);
+    const result = currentUser.submitSolution(blocks, problem);
+
+    console.log("Final x:", result.result);
+
+    if (result.isCorrect) {
+        // Handle problem completion
+        console.log("Problem solved!");
+
+        // Save progress
+        currentUser.save();
+
+        // Offer to move to the next problem
+        const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
+        if (nextProblem) {
+            // TODO: Show completion dialog and offer next problem
+            loadNextProblem(nextProblem);
+        } else {
+            // TODO: Show game completion
+            console.log("Congratulations! You've completed all problems!");
+        }
+    } else {
+        console.log(`Attempt ${result.attemptsMade}: Not quite right. Try again!`);
     }
-    console.log("Final x:", x);
+}
+
+// Function to load the next problem
+function loadNextProblem(nextProblem) {
+    // Start the next problem
+    const gameState = currentUser.startProblem(nextProblem);
+
+    // Reset blocks array
+    blocks = [];
+    blocks.push(new CodeBlock("x = " + gameState.problem.initialValue, CODE_X, CODE_Y_START, true));
+    blocks.push(...gameState.blocks);
+
+    // Update available blocks
+    allBlocks = gameState.availableBlocks;
+
+    // Fill the rest with nulls
+    while (blocks.length < NUM_LINES) {
+        blocks.push(null);
+    }
+
+    // Make sure blocks are properly arranged
+    shiftBlocksUp();
 }
 
 function saveLayout() {
@@ -421,7 +488,7 @@ function loadLayout() {
 }
 
 class CodeBlock {
-    constructor(text, x, y) {
+    constructor(text, x, y, isLocked = false) {
         this.text = text;
         this.x = x;
         this.y = y;
@@ -429,6 +496,7 @@ class CodeBlock {
         this.h = 30;
         this.offsetX = 0;
         this.offsetY = 0;
+        this.isLocked = isLocked
     }
 
     contains(mx, my) {
@@ -441,10 +509,15 @@ class CodeBlock {
         fill(50, 50, 50, 150);
         rect(this.x + 3, this.y + 3, this.w, this.h, 6);
         // Main block
-        fill(isDragging ? '#557' : '#446');
+        if (this.isLocked) {
+            fill('#664'); // Different color for locked blocks
+        } else {
+            fill(isDragging ? '#557' : '#446');
+        }
         rect(this.x, this.y, this.w, this.h, 6);
         fill(255);
         text(this.text, this.x + 10, this.y + 20);
+
     }
 
     evaluate(x) {
@@ -708,12 +781,24 @@ class ForLoopBlock extends CompoundBlock {
         text(")", offset, this.y + 20);
     }
 
+    evaluate_cond(x) {
+        const parts = this.cond.trim().split(/\s+/);
+        let cond = parts[0];
+        let val = parts[1];
+        return eval(`x ${cond} ${val}`);
+    }
+
     evaluate(x) {
         try {
             // let bodyCode = this.children.map(b => b.text).join("\n");
-            let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
-            console.log("Body Code:", bodyCode);
-            return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
+            //let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
+            //return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
+            for (let i = this.init; this.evaluate_cond(i); i += this.inc) {
+                for (let child of this.children) {
+                    x = child.evaluate(x);
+                }
+            }
+            return x;
         } catch (e) {
             console.error("Loop Error:", e);
             return x;
@@ -772,6 +857,19 @@ class IfElseBlock extends CompoundBlock {
         this.elseSection.x = this.x + 20;
         this.elseSection.y = this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10;
         this.elseSection.draw();
+    }
+
+    evaluate_cond(x) {
+        try {
+            // Replace all occurrences of 'x' with the actual value
+            const conditionWithX = this.cond.replace(/\bx\b/g, x);
+
+            // Use eval to evaluate the condition directly
+            return eval(conditionWithX);
+        } catch (e) {
+            console.error("Error evaluating condition:", e, "Condition:", this.cond);
+            return false;
+        }
     }
 
     evaluate(x) {
@@ -844,12 +942,25 @@ class WhileBlock extends CompoundBlock {
         this.baseWidth = 110;
     }
 
+    evaluate_cond(x) {
+        const parts = this.cond.trim().split(/\s+/);
+        let cond = parts[0];
+        let val = parts[1];
+        return eval(`x ${cond} ${val}`);
+    }
+
     evaluate(x) {
         try {
-            if (this.children.length === 0) return x; // Avoid infinite loop
-            while (new Function("x", `return ${this.cond}`)(x)) {
-                for (let child of this.children) x = child.evaluate(x);
+            //if (this.children.length === 0) return x; // Avoid infinite loop
+            //while (new Function("x", `return ${this.cond}`)(x)) {
+            //for (let child of this.children) x = child.evaluate(x);
+            //}
+            while (this.evaluate_cond(x)) {
+                for (let child of this.children) {
+                    x = child.evaluate(x);
+                }
             }
+            return x;
         } catch (e) {
             console.error("While Error:", e);
         }
