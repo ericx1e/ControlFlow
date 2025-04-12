@@ -31,6 +31,11 @@ function setup() {
     allBlocks.push(new IfElseBlock(CODE_X + CODE_WIDTH + 10, 100 + 4 * SIDEBAR_BLOCK_SPACING));
     allBlocks.push(new WhileBlock(CODE_X + CODE_WIDTH + 10, 100 + 5 * SIDEBAR_BLOCK_SPACING));
     allBlocks.push(new PrintBlock(CODE_X + CODE_WIDTH + 10, 100 + 6 * SIDEBAR_BLOCK_SPACING));
+    allBlocks.push(new ConditionBlock("x % 2 == 0", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
+    allBlocks.push(new ConditionBlock("x < 10", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
+    allBlocks.push(new ConditionBlock("i < 5", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
+    allBlocks.push(new InitBlock("let i = 0", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
+    allBlocks.push(new IncBlock("i++", CODE_X + CODE_WIDTH + 10, SIDEBAR_BLOCK_SPACING));
 
 }
 
@@ -61,6 +66,7 @@ function drawCodeLines() {
     let currentY = CODE_Y_START;
     let currentLine = 0;
 
+    // for (let i = blocks.length - 1; i >= 0; i--) { // Iterate backwards to draw overlapping blocks properly
     for (let i = 0; i < blocks.length; i++) {
         let block = blocks[i];
         if (!block) continue;
@@ -112,23 +118,6 @@ function drawCodeLines() {
             }
         }
     }
-
-    if (compoundHover) {
-        fill(255, 255, 0, 80);
-        rect(
-            compoundHover.x + 20,
-            compoundHover.y + compoundHover.h,
-            compoundHover.w - 40,
-            compoundHover.children.length * LINE_HEIGHT + 10,
-            6
-        );
-    } else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT) {
-        let gy = CODE_Y_START + ghostIndex * LINE_HEIGHT;
-        noStroke();
-        fill(255, 255, 255, 50);
-        rect(CODE_X, gy, 300, 30);
-    }
-
 }
 
 function findDeepestCompoundHover(blockList, mx, my) {
@@ -164,6 +153,21 @@ function drawBlocks() {
     for (let block of allBlocks) {
         if (block) block.draw();
     }
+    if (compoundHover && draggingBlock) {
+        fill(255, 255, 0, 50);
+        rect(
+            compoundHover.x + 20,
+            compoundHover.y + compoundHover.h,
+            compoundHover.w - 40,
+            (compoundHover.getHeightInLines() - 1) * LINE_HEIGHT + 10,
+            6
+        );
+    } else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT) {
+        let gy = CODE_Y_START + ghostIndex * LINE_HEIGHT;
+        noStroke();
+        fill(255, 255, 255, 50);
+        rect(CODE_X, gy, 300, 30);
+    }
 }
 
 function drawButtons() {
@@ -183,22 +187,29 @@ function mousePressed() {
         mouseY > BUTTON_Y_START && mouseY < BUTTON_Y_START + BUTTON_HEIGHT)
         return runCode();
 
-    const targetBlock = findBlockAt(mouseX, mouseY, allBlocks.concat(blocks));
+    const targetBlock = findBlockAt(mouseX, mouseY, blocks.concat(allBlocks));
 
     if (targetBlock) {
         draggingBlock = targetBlock;
         draggingBlock.offsetX = targetBlock.x - mouseX;
         draggingBlock.offsetY = targetBlock.y - mouseY;
+        promoteBlock(draggingBlock);
         removeBlock(draggingBlock);
     }
 }
 
 function findBlockAt(mx, my, blockList) {
-    for (let block of blockList) {
+    for (let i = blockList.length - 1; i >= 0; i--) {
+        let block = blockList[i];
+
         if (!block) continue;
-        if (block.contains(mx, my)) return block;
 
         if (block instanceof CompoundBlock) {
+            for (let key in block.header) {
+                let h = block.header[key];
+                if (h.contains(mx, my)) return h;
+            }
+
             const children = block instanceof IfElseBlock
                 ? [...block.ifSection.children, ...block.elseSection.children]
                 : block.children;
@@ -206,10 +217,57 @@ function findBlockAt(mx, my, blockList) {
             const childMatch = findBlockAt(mx, my, children);
             if (childMatch) return childMatch;
         }
+
+        if (block.contains(mx, my)) return block;
     }
+
     return null;
 }
 
+// Bring targetBlock to top of its layer
+function promoteBlock(block) {
+    // 1. allBlocks
+    const idx1 = allBlocks.indexOf(block);
+    if (idx1 !== -1) {
+        allBlocks.splice(idx1, 1);
+        allBlocks.push(block);
+        return;
+    }
+
+    // 2. top-level blocks[]
+    const idx2 = blocks.indexOf(block);
+    if (idx2 !== -1) {
+        blocks.splice(idx2, 1);
+        blocks.push(block);
+        return;
+    }
+
+    // 3. children of compound blocks
+    for (let b of blocks) {
+        if (b instanceof CompoundBlock) {
+            // children
+            const list = b instanceof IfElseBlock
+                ? [...b.ifSection.children, ...b.elseSection.children]
+                : b.children;
+
+            const idx = list.indexOf(block);
+            if (idx !== -1) {
+                list.splice(idx, 1);
+                list.push(block);
+                return;
+            }
+
+            // header
+            for (let [key, headerBlock] of Object.entries(b.header)) {
+                if (headerBlock === block) {
+                    delete b.header[key];
+                    b.header[key] = block; // re-add to end
+                    return;
+                }
+            }
+        }
+    }
+}
 
 function mouseReleased() {
     if (!draggingBlock) return;
@@ -226,6 +284,11 @@ function mouseReleased() {
             return;
         }
     }
+    if (compoundHover && draggingBlock) {
+        compoundHover.addChild(draggingBlock);
+        draggingBlock = null;
+        return;
+    }
 
     // Drop in sidebar
     // if (mouseX > SIDEBAR_X) {
@@ -240,9 +303,15 @@ function mouseReleased() {
 
     // Drop in code area
     if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT) {
-        blocks.splice(ghostIndex, 0, draggingBlock);
-        blocks = blocks.slice(0, NUM_LINES);
-        shiftBlocksUp();
+        if (!(draggingBlock instanceof HeaderBlock)) {
+            blocks.splice(ghostIndex, 0, draggingBlock);
+            blocks = blocks.slice(0, NUM_LINES);
+            shiftBlocksUp();
+        } else {
+            if (blocks[ghostIndex] instanceof CompoundBlock && blocks[ghostIndex].canAcceptHeader(mouseX, mouseY, draggingBlock)) {
+                blocks[ghostIndex].acceptHeader(draggingBlock);
+            }
+        }
     }
 
     draggingBlock = null;
@@ -270,6 +339,17 @@ function removeBlock(target) {
         return;
     }
 
+    for (let block of blocks) {
+        if (block instanceof CompoundBlock) {
+            for (let [key, headerBlock] of Object.entries(block.header)) {
+                if (headerBlock === target) {
+                    delete block.header[key];
+                    return;
+                }
+            }
+        }
+    }
+
     // Search recursively through all compound blocks
     for (let block of blocks) {
         if (recursiveRemove(target, block)) return;
@@ -282,6 +362,13 @@ function recursiveRemove(target, parentBlock) {
     const children = parentBlock instanceof IfElseBlock
         ? [parentBlock.ifSection.children, parentBlock.elseSection.children]
         : [parentBlock.children];
+
+    for (let [key, block] of Object.entries(parentBlock.header)) {
+        if (block === target) {
+            delete parentBlock.header[key];
+            return true;
+        }
+    }
 
     for (let list of children) {
         const idx = list.indexOf(target);
@@ -382,6 +469,7 @@ class CompoundBlock extends CodeBlock {
     constructor(text, x, y) {
         super(text, x, y, false);
         this.children = [];
+        this.header = {};
     }
 
     addChild(block) {
@@ -390,7 +478,11 @@ class CompoundBlock extends CodeBlock {
 
     canAcceptChild(mx, my) {
         const childAreaTop = this.y + this.h;
-        const childAreaBottom = childAreaTop + this.children.length * LINE_HEIGHT + 40;
+        let childrenLineHeight = this.getHeightInLines() - 1;
+        // for (let child of this.children) {
+        //     childrenLineHeight += child.getHeightInLines();
+        // }
+        const childAreaBottom = childAreaTop + (this.getHeightInLines() - 1) * LINE_HEIGHT + 10;
         return (
             mx > this.x + 20 &&
             mx < this.x + this.w - 20 &&
@@ -403,28 +495,106 @@ class CompoundBlock extends CodeBlock {
         return 1 + this.children.reduce((sum, c) => sum + c.getHeightInLines(), 0);
     }
 
+    addHeaderBlock(block) {
+        const typeName = block.constructor.name;
+        this.header[typeName] = block;
+    }
+
+    getHeaderBlock(type) {
+        return this.header[type.name] || null;
+    }
+
+    hasHeaderBlock(type) {
+        return !!this.getHeaderBlock(type);
+    }
+
+    removeHeaderBlock(block) {
+        const typeName = block.constructor.name;
+        if (this.header[typeName] === block) {
+            delete this.header[typeName];
+        }
+    }
+
+    canAcceptHeader(mx, my) {
+        return mx > this.x && mx < this.x + this.w &&
+            my > this.y && my < this.y + this.h &&
+            !this.hasHeaderBlock(ConditionBlock); // allow only one condition
+    }
+
+    acceptHeader(block) {
+        if (block instanceof ConditionBlock && !this.hasHeaderBlock(ConditionBlock)) {
+            this.addHeaderBlock(block);
+            return true;
+        }
+
+        return false;
+    }
+
     draw(isDragging = false) {
+        // First: calculate dynamic width based on children
+        let baseWidth = max(textWidth(this.text) + 40, this.baseWidth); // base for header
+        let maxWidth = 0;
+
+        const allChildren = this instanceof IfElseBlock
+            ? [...this.ifSection.children, ...this.elseSection.children]
+            : this.children;
+
+        for (let child of allChildren) {
+            const childWidth = 40 + child.w;
+            if (childWidth > maxWidth) {
+                maxWidth = childWidth;
+            }
+        }
+
+        let headerWidth = baseWidth;
+        for (let key in this.header) {
+            let h = this.header[key];
+            headerWidth += h.w;
+        }
+        if (headerWidth > maxWidth) {
+            maxWidth = headerWidth;
+        }
+
+        this.w = max(baseWidth, maxWidth + 10); // set width with padding
+
+        // Now draw block shell
         noStroke();
-        // Draw children
+        fill(50, 50, 50, 150);
+        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
+
+        fill(isDragging ? '#966' : '#855');
+        rect(this.x, this.y, this.w, this.h, 6);
+
+        // fill(255);
+        // text(this.text, this.x + 10, this.y + 20);
+        if (!(this instanceof ForLoopBlock)) {
+            if (this.hasHeaderBlock(ConditionBlock)) {
+                const condBlock = this.getHeaderBlock(ConditionBlock);
+                fill(255);
+                text(`${this.text.split("(")[0]}(`, this.x + 10, this.y + 20);
+                condBlock.x = this.x + textWidth(`${this.text.split("(")[0]}(`) + 10;
+                condBlock.y = this.y + 2;
+                condBlock.draw();
+                text(`)`, condBlock.x + condBlock.w + 5, this.y + 20);
+            } else {
+                fill(255);
+                text(`${this.text} (?)`, this.x + 10, this.y + 20);
+            }
+        }
+
+        // Child container background
         fill(50, 50, 50, 150);
         let childHeight = this.getHeightInLines() - 1;
-        rect(this.x + 20, this.y + this.h, this.w - 40, childHeight * LINE_HEIGHT + 10, 6);
-        let childY = this.y + this.h + 5; // TODO: Easier way to rearrange children
-        for (let child of this.children) {
+        rect(this.x + 20, this.y + this.h, this.w - 20, childHeight * LINE_HEIGHT + 10, 6);
+
+        // Draw children
+        let childY = this.y + this.h + 5;
+        for (let child of allChildren) {
             child.x = this.x + 30;
             child.y = childY;
             child.draw();
             childY += child.getHeightInLines() * LINE_HEIGHT;
         }
-
-        // Draw block itself
-        // Drop shadow
-        fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
-        fill(isDragging ? '#966' : '#855');
-        rect(this.x, this.y, this.w, this.h, 6);
-        fill(255);
-        text(this.text, this.x + 10, this.y + 20);
     }
 
     evaluate(x) {
@@ -435,20 +605,114 @@ class CompoundBlock extends CodeBlock {
     }
 }
 
+class HeaderBlock extends CodeBlock {
+    constructor(text, x, y) {
+        super(text, x, y);
+        this.w = textWidth(text) + 20;
+        this.h = 25;
+    }
+
+    draw(isDragging = false) {
+        noStroke();
+        fill(50, 50, 50, 150);
+        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
+        fill(isDragging ? '#6a6' : '#4b4');
+        rect(this.x, this.y, this.w, this.h, 6);
+        fill(255);
+        text(this.text, this.x + 10, this.y + 20);
+    }
+
+    isHeaderOnly() {
+        return true;
+    }
+}
+
 class ForLoopBlock extends CompoundBlock {
     constructor(x, y) {
-        super("for (...)", x, y);
-        this.init = "let i = 0";
-        this.cond = "i < 3";
-        this.inc = "i++";
+        super("for (", x, y);
+        // this.init = "let i = 0";
+        // this.cond = "i < 3";
+        // this.inc = "i++";
         this.body = this.children;
-        this.w = 250;
+        this.baseWidth = 170;
+    }
+
+    canAcceptHeader(mx, my, block) {
+        return mx > this.x && mx < this.x + this.w &&
+            my > this.y && my < this.y + this.h &&
+            (
+                (block instanceof InitBlock && !this.hasHeaderBlock(InitBlock)) ||
+                (block instanceof ConditionBlock && !this.hasHeaderBlock(ConditionBlock)) ||
+                (block instanceof IncBlock && !this.hasHeaderBlock(IncBlock))
+            );
+    }
+
+    acceptHeader(block) {
+        if (
+            (block instanceof InitBlock && !this.hasHeaderBlock(InitBlock)) ||
+            (block instanceof ConditionBlock && !this.hasHeaderBlock(ConditionBlock)) ||
+            (block instanceof IncBlock && !this.hasHeaderBlock(IncBlock))
+        ) {
+            this.addHeaderBlock(block);
+            return true;
+        }
+        return false;
+    }
+
+    draw(isDragging = false) {
+        super.draw(isDragging);
+        fill(255);
+        text("for (", this.x + 10, this.y + 20);
+
+        let offset = this.x + textWidth("for (") + 10;
+
+        const init = this.getHeaderBlock(InitBlock);
+        if (init) {
+            init.x = offset;
+            init.y = this.y + 2;
+            init.draw();
+            offset += init.w + 10;
+        } else {
+            text("?", offset, this.y + 20);
+            offset += 20;
+        }
+
+        text(";", offset, this.y + 20);
+        offset += 15;
+
+        const cond = this.getHeaderBlock(ConditionBlock);
+        if (cond) {
+            cond.x = offset;
+            cond.y = this.y + 2;
+            cond.draw();
+            offset += cond.w + 10;
+        } else {
+            text("?", offset, this.y + 20);
+            offset += 20;
+        }
+
+        text(";", offset, this.y + 20);
+        offset += 15;
+
+        const inc = this.getHeaderBlock(IncBlock);
+        if (inc) {
+            inc.x = offset;
+            inc.y = this.y + 2;
+            inc.draw();
+            offset += inc.w + 10;
+        } else {
+            text("?", offset, this.y + 20);
+            offset += 20;
+        }
+
+        text(")", offset, this.y + 20);
     }
 
     evaluate(x) {
         try {
             // let bodyCode = this.children.map(b => b.text).join("\n");
             let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
+            console.log("Body Code:", bodyCode);
             return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
         } catch (e) {
             console.error("Loop Error:", e);
@@ -466,13 +730,14 @@ class ForLoopBlock extends CompoundBlock {
         };
     }
 }
+
 class IfElseBlock extends CompoundBlock {
     constructor(x, y) {
         super("if (...) { } else { }", x, y);
         this.cond = "x % 2 === 0";
         this.ifSection = new SectionBlock("if", x, y + 35);
         this.elseSection = new SectionBlock("else", x, y + 100);
-        this.w = 280;
+        this.baseWidth = 280;
     }
 
     canAcceptChild(mx, my) {
@@ -572,9 +837,11 @@ class SectionBlock {
 
 class WhileBlock extends CompoundBlock {
     constructor(x, y) {
-        super("while (...)", x, y);
-        this.cond = "x < 10";
-        this.w = 250;
+        super("while", x, y);
+        // this.cond = "x < 10";
+        this.condBlock = null;  // holds the ConditionBlock instance
+        // this.text = `while (${this.cond})`;
+        this.baseWidth = 110;
     }
 
     evaluate(x) {
@@ -614,6 +881,16 @@ class PrintBlock extends CodeBlock {
     }
 }
 
+class ConditionBlock extends HeaderBlock {
+    constructor(text, x, y) {
+        super(text, x, y);
+    }
+
+    serialize() {
+        return { type: "cond", text: this.text };
+    }
+}
+
 
 function deserialize(obj) {
     if (!obj) return null;
@@ -641,4 +918,24 @@ function deserialize(obj) {
         return loop;
     }
     return null;
+}
+
+class InitBlock extends HeaderBlock {
+    constructor(text, x, y) {
+        super(text, x, y);
+    }
+
+    serialize() {
+        return { type: "init", text: this.text };
+    }
+}
+
+class IncBlock extends HeaderBlock {
+    constructor(text, x, y) {
+        super(text, x, y);
+    }
+
+    serialize() {
+        return { type: "inc", text: this.text };
+    }
 }
