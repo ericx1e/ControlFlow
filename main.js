@@ -453,7 +453,8 @@ function setup() {
     // Load or create user
     currentUser = User.load() || new User('user1', 'Player 1');
 
-    shop = Shop.initializeDefaultShop();
+    // shop = Shop.initializeDefaultShop();
+    setupShopSystem()
 
     // Start the first problem if no current problem
     // if (!currentUser.currentProblem) {
@@ -1021,6 +1022,18 @@ function mousePressed() {
         promoteBlock(draggingBlock);
         removeBlock(draggingBlock);
     }
+}
+
+// Call this function when setting up your game
+function setupShopSystem() {
+    // Initialize the full pool of possible items
+    initializeItemPool();
+    
+    // Generate the initial shop items
+    refreshShop();
+    
+    // Add a shop button to your buttons
+    // This is already handled in the updated mousePressed function
 }
 
 function findBlockAt(mx, my, blockList) {
@@ -1953,4 +1966,10 @@ class IncBlock extends HeaderBlock {
         return { type: "inc", text: this.text };
     }
 }
+
+// Utility function for factorial block
+function factorial(n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+  }
 
