@@ -787,13 +787,6 @@ class ForLoopBlock extends CompoundBlock {
         text(")", offset, this.y + 20);
     }
 
-    evaluate_cond(condTxt, x) {
-        const parts = condTxt.trim().split(/\s+/);
-        let cond = parts[0];
-        let val = parts[1];
-        return eval(`${x} ${cond} ${val}`);
-    }
-
     evaluate(x) {
         try {
             // let bodyCode = this.children.map(b => b.text).join("\n");
@@ -809,7 +802,8 @@ class ForLoopBlock extends CompoundBlock {
                 return x;
             }
 
-            for (let i = initBlock.value; this.evaluate_cond(condBlock.text, i); i += incBlock.value) {
+            for (let i = initBlock.value; eval(condBlock.text); i += incBlock.value) {
+                console.log(i);
                 for (let child of this.children) {
                     x = child.evaluate(x);
                 }
