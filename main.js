@@ -472,6 +472,11 @@ function loadNextProblem(nextProblem) {
     shiftBlocksUp();
 }
 
+// Function to load the shop between problems
+function loadShop() {
+    console.log("nothing yet");
+}
+
 function saveLayout() {
     const layout = blocks.map(b => b ? b.serialize() : null);
     // localStorage.setItem("codeLayout", JSON.stringify(layout));
@@ -1051,3 +1056,4 @@ class IncBlock extends HeaderBlock {
         return { type: "inc", text: this.text };
     }
 }
+
