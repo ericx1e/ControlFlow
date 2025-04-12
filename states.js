@@ -344,7 +344,7 @@ class Problem {
         'Perfect 10',
         'Starting with x = 2, reach exactly 10 using addition and multiplication operations.',
         2,  // initial value
-        10  // target value
+        8  // target value
       );
       problem2.addAvailableBlock(new CodeBlock("x += 2;", SIDEBAR_X, CODE_Y_START));
       problem2.addAvailableBlock(new CodeBlock("x *= 2;", SIDEBAR_X, CODE_Y_START));

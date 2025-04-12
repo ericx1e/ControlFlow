@@ -29,16 +29,19 @@ function setup() {
     
     // Load or create user
     currentUser = User.load() || new User('user1', 'Player 1');
+    console.log(currentUser.currentProblem)
     
     // Start the first problem if no current problem
     if (!currentUser.currentProblem) {
-        const firstProblem = problemManager.getProblem(problemManager.problemOrder[0]);
+        const problem = problemManager.getProblem(problemManager.problemOrder[0]);
         const gameState = currentUser.startProblem(firstProblem);
-        
-        // Set up game state
-        blocks = gameState.blocks;
-        allBlocks = gameState.availableBlocks;
     }
+    const problem = problemManager.getProblem(currentUser.currentProblem);
+    const gameState = currentUser.startProblem(problem)
+    // Set up game state
+    blocks.push(new CodeBlock("x = " + gameState.problem.initialValue, CODE_X, CODE_Y_START, true))
+    blocks.push(...gameState.blocks);
+    allBlocks = gameState.availableBlocks;
 
     if (!blocks || blocks.length === 0) {
         for (let i = 0; i < NUM_LINES; i++) blocks.push(null);
@@ -205,7 +208,7 @@ function mousePressed() {
 
     const targetBlock = findBlockAt(mouseX, mouseY, allBlocks.concat(blocks));
 
-    if (targetBlock) {
+    if (targetBlock && !targetBlock.isLocked) {
         draggingBlock = targetBlock;
         draggingBlock.offsetX = targetBlock.x - mouseX;
         draggingBlock.offsetY = targetBlock.y - mouseY;
@@ -354,13 +357,37 @@ function runCode() {
       const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
       if (nextProblem) {
         // TODO: Show completion dialog and offer next problem
+        loadNextProblem(nextProblem);
       } else {
         // TODO: Show game completion
+        console.log("Congratulations! You've completed all problems!");
       }
     } else {
       console.log(`Attempt ${result.attemptsMade}: Not quite right. Try again!`);
     }
-  }
+}
+
+// Function to load the next problem
+function loadNextProblem(nextProblem) {
+    // Start the next problem
+    const gameState = currentUser.startProblem(nextProblem);
+    
+    // Reset blocks array
+    blocks = [];
+    blocks.push(new CodeBlock("x = " + gameState.problem.initialValue, CODE_X, CODE_Y_START, true));
+    blocks.push(...gameState.blocks);
+    
+    // Update available blocks
+    allBlocks = gameState.availableBlocks;
+    
+    // Fill the rest with nulls
+    while (blocks.length < NUM_LINES) {
+        blocks.push(null);
+    }
+    
+    // Make sure blocks are properly arranged
+    shiftBlocksUp();
+}
 
 function saveLayout() {
     const layout = blocks.map(b => b ? b.serialize() : null);
@@ -379,7 +406,7 @@ function loadLayout() {
 }
 
 class CodeBlock {
-    constructor(text, x, y) {
+    constructor(text, x, y, isLocked = false) {
         this.text = text;
         this.x = x;
         this.y = y;
@@ -387,6 +414,7 @@ class CodeBlock {
         this.h = 30;
         this.offsetX = 0;
         this.offsetY = 0;
+        this.isLocked = isLocked
     }
 
     contains(mx, my) {
@@ -399,10 +427,15 @@ class CodeBlock {
         fill(50, 50, 50, 150);
         rect(this.x + 3, this.y + 3, this.w, this.h, 6);
         // Main block
-        fill(isDragging ? '#557' : '#446');
+        if (this.isLocked) {
+            fill('#664'); // Different color for locked blocks
+        } else {
+            fill(isDragging ? '#557' : '#446');
+        }
         rect(this.x, this.y, this.w, this.h, 6);
         fill(255);
         text(this.text, this.x + 10, this.y + 20);
+
     }
 
     evaluate(x) {
