@@ -286,6 +286,22 @@ function initializeItemPool() {
             price: 12,
             rarity: 'rare',
             block: () => new CodeBlock("x = x > 12 ? x : factorial(x);", 0, 0)
-        }
+        },
+        {
+            id: 'add_i',
+            name: 'Add i Value',
+            description: 'Add loop variable i to x',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new AddIBlock(0, 0)
+        },
+        {
+            id: 'break_block',
+            name: 'Break Block',
+            description: 'Break out of the current loop',
+            price: 6,
+            rarity: 'uncommon',
+            block: () => new BreakBlock(0, 0)
+        },
     ];
 }

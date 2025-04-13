@@ -218,6 +218,8 @@ class HeaderBlock extends CodeBlock {
     }
 }
 
+let loopVariables = {};  // To track loop variables by name
+
 class ForLoopBlock extends CompoundBlock {
     constructor(x, y) {
         super("for (", x, y);
@@ -299,6 +301,7 @@ class ForLoopBlock extends CompoundBlock {
         text(")", offset, this.y + 20);
     }
 
+    /*
     evaluate(x) {
         try {
             // let bodyCode = this.children.map(b => b.text).join("\n");
@@ -326,6 +329,53 @@ class ForLoopBlock extends CompoundBlock {
             return x;
         }
     }
+    */
+
+    evaluate(x) {
+        try {
+            const initBlock = this.getHeaderBlock(InitBlock);
+            const condBlock = this.getHeaderBlock(ConditionBlock);
+            const incBlock = this.getHeaderBlock(IncBlock);
+
+            if (!initBlock || !condBlock || !incBlock) {
+                console.warn("Missing header blocks in for-loop");
+                return x;
+            }
+
+            // Extract variable name from init block (assuming format "let X = Y")
+            const varNameMatch = initBlock.text.match(/let\s+([a-zA-Z0-9_]+)\s*=/);
+            const varName = varNameMatch ? varNameMatch[1] : "i";
+
+            let result = x;
+
+            // Start the loop
+            for (let i = initBlock.value; eval(condBlock.text); i += incBlock.value) {
+                // Store the loop variable in global object
+                loopVariables[varName] = i;
+
+                // Evaluate children with the loop variable context
+                for (let child of this.children) {
+                    let prevVal = result;
+                    result = child.evaluate(result);
+
+                    // Check if a break was triggered
+                    if (result === "BREAK") {
+                        // Return current values and exit loop
+                        delete loopVariables[varName]; // Clean up
+                        return prevVal;
+                    }
+                }
+            }
+
+            // Clean up the loop variable when done
+            delete loopVariables[varName];
+
+            return result;
+        } catch (e) {
+            console.error("Loop Error:", e);
+            return x;
+        }
+    }
 
     serialize() {
         return {
@@ -338,6 +388,34 @@ class ForLoopBlock extends CompoundBlock {
     }
 }
 
+// Create a simple x += i block
+class AddIBlock extends CodeBlock {
+    constructor(x, y) {
+        super("x += i;", x, y);
+        this.w = 100;
+        this.color = color(100, 160, 220);
+    }
+
+    evaluate(x) {
+        // Get the i value from loop variables if available
+        if ('i' in loopVariables) {
+            return x + loopVariables['i'];
+        } else {
+            console.warn("Loop variable 'i' not found. Using 0 instead.");
+            return x; // If not in a loop, don't change x
+        }
+    }
+
+    serialize() {
+        return {
+            type: "AddIBlock",
+            x: this.x,
+            y: this.y,
+            isLocked: this.isLocked
+        };
+    }
+}
+
 class IfElseBlock extends CompoundBlock {
     constructor(x, y) {
         super("if (...) { } else { }", x, y);
@@ -345,6 +423,7 @@ class IfElseBlock extends CompoundBlock {
         this.ifSection = new SectionBlock("if", x, y + 35);
         this.elseSection = new SectionBlock("else", x, y + 100);
         this.baseWidth = 280;
+        this.h = 25;
     }
 
     canAcceptChild(mx, my) {
@@ -380,6 +459,7 @@ class IfElseBlock extends CompoundBlock {
 
     draw(isDragging = false) {
         noStroke();
+        textSize(14);
 
         // Draw IF container
         fill(50, 50, 50, 150);
@@ -390,7 +470,7 @@ class IfElseBlock extends CompoundBlock {
         // Draw IF header
         fill(255);
         let offset = this.x + 10;
-        text("if (", offset, this.y + 20);
+        text("if (", offset, this.y + 16);
         offset += textWidth("if (");
 
         const condBlock = this.getHeaderBlock(ConditionBlock);
@@ -400,23 +480,28 @@ class IfElseBlock extends CompoundBlock {
             condBlock.draw();
             offset += condBlock.w + 5;
         } else {
-            text("?", offset, this.y + 20);
+            text("?", offset, this.y + 16);
             offset += 20;
         }
 
-        text(") {", offset, this.y + 20);
+        text(")", offset, this.y + 15);
 
         // IF section
         this.ifSection.x = this.x + 20;
         this.ifSection.y = this.y + this.h;
         this.ifSection.draw();
 
+        // Draw ELSE container
+        fill(50, 50, 50, 150);
+        rect(this.x + 3, this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10, this.w, this.h, 6);
+        // rect(this.x, this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10, this.w, this.h, 6);
+
         // ELSE block header
         const elseY = this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10;
-        fill(30);
+        fill(isDragging ? '#559' : '#458');
         rect(this.x, elseY, this.w, this.h, 6);
         fill(255);
-        text("else {", this.x + 10, elseY + 20);
+        text("else", this.x + 10, elseY + 16);
 
         // ELSE section
         this.elseSection.x = this.x + 20;
@@ -479,6 +564,7 @@ class SectionBlock {
 
     draw() {
         fill(70);
+        textSize(14);
         // text(this.label, this.x + 5, this.y + 15);
         fill(50, 50, 50, 150);
         rect(this.x, this.y, 240, this.getHeightInLines() * LINE_HEIGHT + 10, 6);
@@ -509,6 +595,7 @@ class WhileBlock extends CompoundBlock {
         return eval(`x ${cond} ${val}`);
     }
 
+    /*
     evaluate(x) {
         try {
             //if (this.children.length === 0) return x; // Avoid infinite loop
@@ -543,12 +630,86 @@ class WhileBlock extends CompoundBlock {
         }
         return x;
     }
+        */
+    evaluate(x) {
+        try {
+            const condBlock = this.getHeaderBlock(ConditionBlock);
+
+            if (!condBlock) {
+                console.warn("Missing condition block in while-loop");
+                return x;
+            }
+
+            let maxIterations = 10000;
+            let count = 0;
+            let result = x;
+
+            while (condBlock.evaluateCondition(result) && count++ < maxIterations) {
+                for (let child of this.children) {
+                    prevVal = result;
+                    result = child.evaluate(result);
+
+                    // Check for break
+                    if (result === "BREAK") {
+                        return prevVal; // Exit loop if break is encountered
+                    }
+                }
+            }
+
+            if (count >= maxIterations) {
+                console.warn("Max iterations reached");
+            }
+
+            return result;
+        } catch (e) {
+            console.error("While Error:", e);
+            return x;
+        }
+    }
 
     serialize() {
         return {
             type: "while",
             cond: this.cond,
             body: this.children.map(b => b.serialize())
+        };
+    }
+}
+
+class BreakBlock extends CodeBlock {
+    constructor(x, y) {
+        super("break;", x, y);
+        this.w = 100;
+        this.color = color(200, 100, 70);
+    }
+
+    draw(isDragging = false) {
+        textSize(14);
+        // Drop shadow
+        fill(50, 50, 50, 150);
+        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
+
+        // Main block
+        fill(this.isLocked ? '#865' : (isDragging ? '#a65' : this.color));
+        rect(this.x, this.y, this.w, this.h, 6);
+
+        fill(255);
+        textAlign(CENTER, CENTER);
+        text(this.text, this.x + this.w / 2, this.y + this.h / 2);
+        textAlign(LEFT, BASELINE);
+    }
+
+    evaluate(x) {
+        // Simply return the special "BREAK" signal
+        return "BREAK";
+    }
+
+    serialize() {
+        return {
+            type: "BreakBlock",
+            x: this.x,
+            y: this.y,
+            isLocked: this.isLocked
         };
     }
 }

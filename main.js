@@ -5,8 +5,8 @@
 const NUM_LINES = 40;
 const LINE_HEIGHT = 35;
 const CODE_X = 100;
-const CODE_Y_START = 100;
-const TITLE_Y_START = 50
+const CODE_Y_START = 130;
+const TITLE_Y_START = 25;
 const CODE_WIDTH = 900;
 const SIDEBAR_X = CODE_X + CODE_WIDTH + 50; // Dont really need this lol
 const SIDEBAR_BLOCK_SPACING = 80;
@@ -140,9 +140,9 @@ function draw() {
         case "GAMEPLAY":
             background(30);
             drawCodeLines();
+            drawTarget();
             drawSidebar();
             drawBlocks();
-            drawTarget();
             drawShop();
 
             if (draggingBlock) {
@@ -157,12 +157,37 @@ function draw() {
 }
 
 function drawCodeLines() {
-    fill(255);
-    textSize(16);
-    text("Function: f(x)", CODE_X, CODE_Y_START - 10);
+    // Constants for the shifted layout
+    const LINE_NUMBER_WIDTH = 60;
+    const CODE_AREA_START = 5; // Start at the left edge
+    // const CODE_CONTENT_START = CODE_AREA_START + LINE_NUMBER_WIDTH + 2; // Where the actual code blocks begin
+    const CODE_CONTENT_START = CODE_X;
 
-    noFill();
-    stroke(255);
+    // Code area background with a subtle gradient
+    noStroke();
+    fill(35, 40, 55); // Base color
+    rect(CODE_AREA_START, CODE_Y_START - 40, CODE_WIDTH + 90, NUM_LINES * LINE_HEIGHT + 60, 8);
+
+    // Add a subtle inner shadow at the top
+    fill(25, 30, 45, 100);
+    rect(CODE_AREA_START, CODE_Y_START - 40, CODE_WIDTH + 90, 12, 8, 8, 0, 0);
+
+    // Line number area with different background
+    fill(30, 35, 50);
+    rect(CODE_AREA_START, CODE_Y_START - 40, LINE_NUMBER_WIDTH, NUM_LINES * LINE_HEIGHT + 60, 8, 0, 0, 8);
+
+    // Add a small heading for the function
+    fill(80, 180, 255);
+    textSize(16);
+    textStyle(BOLD);
+    text("function solution()", CODE_AREA_START + LINE_NUMBER_WIDTH + 10, CODE_Y_START - 10);
+    textStyle(NORMAL);
+
+    // Vertical separator line between line numbers and code
+    stroke(60, 70, 90);
+    strokeWeight(2);
+    line(CODE_AREA_START + LINE_NUMBER_WIDTH, CODE_Y_START - 30, CODE_AREA_START + LINE_NUMBER_WIDTH, CODE_Y_START + NUM_LINES * LINE_HEIGHT + 10);
+    noStroke();
 
     ghostIndex = -1;
     compoundHover = null;
@@ -170,22 +195,19 @@ function drawCodeLines() {
     let currentY = CODE_Y_START;
     let currentLine = 0;
 
-    // for (let i = blocks.length - 1; i >= 0; i--) { // Iterate backwards to draw overlapping blocks properly
     for (let i = 0; i < blocks.length; i++) {
         let block = blocks[i];
         if (!block) continue;
         let span = block.getHeightInLines();
 
-        // Set block position
-        block.x = CODE_X;
+        // Set block position - adjust to new layout
+        block.x = CODE_CONTENT_START;
         block.y = currentY;
         block.draw();
 
         // Compound hover highlight
         if (block instanceof CompoundBlock && block.canAcceptChild(mouseX, mouseY)) {
-            // compoundHover = block;
             compoundHover = findDeepestCompoundHover(blocks, mouseX, mouseY);
-
             ghostIndex = -1;
         } else if (ghostIndex === -1 && block.contains(mouseX, mouseY) && !block.isLocked) {
             if (draggingBlock instanceof HeaderBlock) {
@@ -197,27 +219,72 @@ function drawCodeLines() {
             }
         }
 
-        // Draw line numbers for span
+        // Draw line numbers with improved styling
         stroke(100);
-        fill(100);
+        fill(160, 180, 220);
+        textSize(13);
+
         for (let j = 0; j < span; j++) {
-            line(40, currentY + j * LINE_HEIGHT, CODE_X + CODE_WIDTH, currentY + j * LINE_HEIGHT);
+            // Draw line itself with subtle alternating background
+            if ((currentLine % 2) === 0) {
+                noStroke();
+                fill(40, 45, 60, 90);
+                rect(CODE_CONTENT_START, currentY + j * LINE_HEIGHT, CODE_WIDTH, LINE_HEIGHT);
+            }
+
+            // Draw horizontal separator lines (thinner and more subtle)
+            stroke(60, 70, 90, 150);
+            strokeWeight(1);
+            line(CODE_AREA_START, currentY + j * LINE_HEIGHT, CODE_CONTENT_START + CODE_WIDTH, currentY + j * LINE_HEIGHT);
+
+            // Draw line numbers with better alignment
             noStroke();
-            text(`${currentLine + 1}:`, 50, currentY + j * LINE_HEIGHT - 10);
+            fill(150, 160, 190);
+            textAlign(RIGHT);
+            text(`${currentLine + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 5, currentY + j * LINE_HEIGHT + 18);
+            textAlign(LEFT);
             currentLine++;
         }
 
         currentY += LINE_HEIGHT * span;
     }
-    // One more line for the last block
-    stroke(100);
-    fill(100);
-    if (blocks.length > 0) {
-        line(40, currentY, CODE_X + CODE_WIDTH, currentY);
-        noStroke();
-        text(`${currentLine + 1}:`, 50, currentY - 10);
-    }
 
+    // One more line for the last block
+    // stroke(60, 70, 90, 150);
+    // strokeWeight(1);
+    // fill(150, 160, 190);
+    // if (blocks.length > 0) {
+    //     line(CODE_AREA_START, currentY, CODE_CONTENT_START + CODE_WIDTH, currentY);
+    //     noStroke();
+    //     textAlign(RIGHT);
+    //     text(`${currentLine + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 5, currentY + 18);
+    //     textAlign(LEFT);
+    // }
+
+    // Add subtle grid markers on empty lines
+    // stroke(60, 70, 90, 80);
+    // strokeWeight(1);
+    // for (let i = currentLine; i < NUM_LINES; i++) {
+    //     // Alternating background for empty lines
+    //     if ((i % 2) === 0) {
+    //         noStroke();
+    //         fill(40, 45, 60, 90);
+    //         rect(CODE_CONTENT_START, CODE_Y_START + i * LINE_HEIGHT, CODE_WIDTH, LINE_HEIGHT);
+    //     }
+
+    //     // Grid lines
+    //     stroke(60, 70, 90, 80);
+    //     line(CODE_AREA_START, CODE_Y_START + i * LINE_HEIGHT, CODE_CONTENT_START + CODE_WIDTH, CODE_Y_START + i * LINE_HEIGHT);
+
+    //     // Line numbers for empty lines
+    //     noStroke();
+    //     fill(110, 120, 150); // Dimmer color for empty lines
+    //     textAlign(RIGHT);
+    //     text(`${i + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 5, CODE_Y_START + i * LINE_HEIGHT + 18);
+    //     textAlign(LEFT);
+    // }
+
+    // Draw ghost block placement indicator
     if (ghostIndex === -1 && draggingBlock && !(draggingBlock instanceof HeaderBlock)) {
         for (let i = 0; i < blocks.length; i++) {
             if (blocks[i] === null) {
@@ -228,6 +295,10 @@ function drawCodeLines() {
             }
         }
     }
+
+    // Reset styling
+    noStroke();
+    textSize(16);
 }
 
 function findDeepestCompoundHover(blockList, mx, my) {
@@ -276,14 +347,14 @@ function drawSidebar() {
     textSize(16);
 
     // Divider line
-    stroke(70, 72, 88);
-    strokeWeight(2);
-    line(
-        CODE_X + CODE_WIDTH + SIDEBAR_PADDING,
-        SIDEBAR_TITLE_Y + SECTION_MARGIN,
-        width - SIDEBAR_PADDING,
-        SIDEBAR_TITLE_Y + SECTION_MARGIN
-    );
+    // stroke(70, 72, 88);
+    // strokeWeight(2);
+    // line(
+    //     CODE_X + CODE_WIDTH + SIDEBAR_PADDING,
+    //     SIDEBAR_TITLE_Y + SECTION_MARGIN,
+    //     width - SIDEBAR_PADDING,
+    //     SIDEBAR_TITLE_Y + SECTION_MARGIN
+    // );
     noStroke();
 
     // Footer section with helpful info
@@ -297,8 +368,8 @@ function drawSidebar() {
     fill(160, 160, 190);
     textSize(14);
     text("Drag blocks into your code →", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, footerY + 25);
-    text("Drag compound blocks to nest them", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, footerY + 45);
-    text("Right-click to see block details", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, footerY + 65);
+    text("Drag into compound blocks to nest", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, footerY + 45);
+    text("Hit run when you are confident in your solution!", CODE_X + CODE_WIDTH + SIDEBAR_PADDING, footerY + 65);
 
     // Reset alignment
     textAlign(LEFT, BASELINE);
@@ -543,18 +614,31 @@ function drawShop() {
 }
 
 function drawTarget() {
+    // Create a header background
+    textAlign(LEFT, TOP);
+    fill(50, 55, 80);
+    rect(0, 0, width, TITLE_Y_START + 60);
 
+    // Add some visual flair - subtle gradient or line
+    fill(40, 45, 70);
+    rect(0, TITLE_Y_START + 58, width, 4);
 
-    // Draw problem title
+    // Draw problem title with improved styling
     fill(255);
-    textSize(20);
-    text("Level " + problemNumber + ": " + title, CODE_X, TITLE_Y_START - 15);
+    textSize(24);
+    text("Level " + problemNumber + ": " + title, CODE_X, TITLE_Y_START - 5);
 
-
-    // Draw target value info
+    // Draw target value info with more prominence
     textSize(20);
     fill(255, 220, 150);
-    text(`Target: ${target}`, CODE_X, TITLE_Y_START + 10);
+    text(`Target: x = ${target}`, CODE_X, TITLE_Y_START + 30);
+
+    // Add description if available
+    if (desc) {
+        textSize(14);
+        fill(200, 200, 200);
+        text(desc, CODE_X + 500, TITLE_Y_START - 5, 400, 40);
+    }
 
     // Reset text size
     textSize(16);
@@ -564,8 +648,12 @@ function drawBlocks() {
     for (let block of allBlocks) {
         if (block) block.draw();
     }
+
+    // Handle ghost indicators for compound blocks
     if (compoundHover && draggingBlock) {
-        fill(255, 255, 0, 50);
+        fill(255, 255, 100, 50);
+        stroke(255, 255, 0, 100 + 80 * sin(frameCount * 0.1));
+        strokeWeight(2);
 
         if (compoundHover instanceof IfElseBlock) {
             // Determine if mouse is hovering over if or else section
@@ -575,11 +663,14 @@ function drawBlocks() {
             const elseHeight = compoundHover.elseSection.getHeightInLines() * LINE_HEIGHT + 10;
 
             if (mouseY > ifTop && mouseY < ifTop + ifHeight) {
+                // Pulsing effect for if section
                 rect(compoundHover.ifSection.x, ifTop, 240, ifHeight, 6);
             } else if (mouseY > elseTop && mouseY < elseTop + elseHeight) {
+                // Pulsing effect for else section
                 rect(compoundHover.elseSection.x, elseTop, 240, elseHeight, 6);
             }
         } else {
+            // Regular compound block highlight with pulsing effect
             rect(
                 compoundHover.x + 20,
                 compoundHover.y + compoundHover.h,
@@ -588,12 +679,155 @@ function drawBlocks() {
                 6
             );
         }
-    } else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT && draggingBlock) {
+        noStroke();
+    }
+    // Handle ghost indicators for header insertion
+    else if (draggingBlock instanceof HeaderBlock && ghostIndex !== -1) {
+        const targetBlock = blocks[ghostIndex];
+        if (targetBlock instanceof CompoundBlock && targetBlock.canAcceptHeader(mouseX, mouseY, draggingBlock)) {
+            // Highlight header insertion area
+            stroke(100, 200, 255);
+            strokeWeight(2);
+            fill(100, 200, 255, 40);
+
+            // Calculate where the header would go based on the type of header
+            let headerX = targetBlock.x;
+            if (targetBlock instanceof ForLoopBlock) {
+                // Determine which part of the for loop to highlight
+                if (draggingBlock instanceof InitBlock) {
+                    headerX += textWidth("for (") + 10;
+                } else if (draggingBlock instanceof ConditionBlock) {
+                    const init = targetBlock.getHeaderBlock(InitBlock);
+                    headerX += textWidth("for (") + 10;
+                    if (init) headerX += init.w + textWidth(";") + 5;
+                    else headerX += textWidth("?;") + 5;
+                } else if (draggingBlock instanceof IncBlock) {
+                    const init = targetBlock.getHeaderBlock(InitBlock);
+                    const cond = targetBlock.getHeaderBlock(ConditionBlock);
+                    headerX += textWidth("for (") + 10;
+                    if (init) headerX += init.w + textWidth(";") + 5;
+                    else headerX += textWidth("?;") + 5;
+                    if (cond) headerX += cond.w + textWidth(";") + 5;
+                    else headerX += textWidth("?;") + 5;
+                }
+            } else {
+                // For other compound blocks like While or IfElse
+                headerX += textWidth(targetBlock instanceof WhileBlock ? "while (" : "if (") + 10;
+            }
+
+            // Pulsing effect for header
+            const pulseAmount = sin(frameCount * 0.1) * 0.5 + 0.5;
+            strokeWeight(2 + pulseAmount * 2);
+            rect(headerX, targetBlock.y + 2, draggingBlock.w, draggingBlock.h, 5);
+            strokeWeight(1);
+            noStroke();
+        }
+    }
+    // Handle ghost indicators for line insertion 
+    else if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT && draggingBlock) {
         let gy = CODE_Y_START + ghostIndex * LINE_HEIGHT;
+
+        // Add basic ghost background
         noStroke();
         fill(255, 255, 255, 50);
-        rect(CODE_X, gy, 300, 30);
+        rect(CODE_X, gy, draggingBlock.w, draggingBlock.h, 5);
+
+        // Add a pulsing effect
+        const pulseAmount = sin(frameCount * 0.1) * 0.5 + 0.5;
+        stroke(100, 200, 255, 150 * pulseAmount);
+        strokeWeight(2);
+        noFill();
+        rect(CODE_X, gy, draggingBlock.w, draggingBlock.h, 5);
+
+        // Add "insert here" indicator
+        // fill(100, 200, 255, 150);
+        // noStroke();
+        // beginShape();
+        // const arrowX = CODE_X - 15;
+        // const arrowY = gy + draggingBlock.h / 2;
+        // vertex(arrowX, arrowY - 10);
+        // vertex(arrowX + 12, arrowY);
+        // vertex(arrowX, arrowY + 10);
+        // endShape(CLOSE);
     }
+}
+
+// Modify findDeepestCompoundHover to provide a more accurate hover target
+function findDeepestCompoundHover(blockList, mx, my) {
+    // Track the deepest valid hover target
+    let deepestHover = null;
+    let deepestLevel = -1;
+    let currentLevel = 0;
+
+    // Helper function to search recursively through nested structures
+    function searchBlocks(blocks, level) {
+        for (let block of blocks) {
+            if (!block) continue;
+
+            if (block instanceof CompoundBlock) {
+                // First check if this compound block accepts the child
+                if (block.canAcceptChild(mx, my)) {
+                    // If it's deeper than our current target, update
+                    if (level > deepestLevel) {
+                        deepestLevel = level;
+                        deepestHover = block;
+                    }
+                }
+
+                // Then check children recursively
+                if (block instanceof IfElseBlock) {
+                    searchBlocks([...block.ifSection.children, ...block.elseSection.children], level + 1);
+                } else {
+                    searchBlocks(block.children, level + 1);
+                }
+            }
+        }
+    }
+
+    // Start the search
+    searchBlocks(blockList, 0);
+    return deepestHover;
+}
+
+// Update mouseReleased to work better with compound blocks and headers
+function mouseReleased() {
+    if (!draggingBlock) return;
+
+    // Check for inserting into compound blocks
+    if (compoundHover && draggingBlock) {
+        compoundHover.addChild(draggingBlock);
+        draggingBlock = null;
+        clickSound.play();
+        return;
+    }
+
+    // Check for header insertion in compound blocks
+    if (draggingBlock instanceof HeaderBlock && ghostIndex !== -1) {
+        const targetBlock = blocks[ghostIndex];
+        if (targetBlock instanceof CompoundBlock && targetBlock.canAcceptHeader(mouseX, mouseY, draggingBlock)) {
+            targetBlock.acceptHeader(draggingBlock);
+            draggingBlock = null;
+            clickSound.play();
+            return;
+        }
+    }
+
+    // Drop in code area (regular line insertion)
+    if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT) {
+        if (!(draggingBlock instanceof HeaderBlock)) {
+            blocks.splice(ghostIndex, 0, draggingBlock);
+            blocks = blocks.slice(0, NUM_LINES);
+            shiftBlocksUp();
+        }
+        clickSound.play();
+    } else {
+        // Drop in sidebar
+        if (!allBlocks.includes(draggingBlock)) {
+            allBlocks.push(draggingBlock);
+        }
+    }
+
+    draggingBlock = null;
 }
 
 // Add this function to draw the popup
@@ -876,57 +1110,6 @@ function promoteBlock(block) {
     }
 }
 
-function mouseReleased() {
-    if (!draggingBlock) return;
-
-    for (let b of blocks) {
-        // if (b instanceof CompoundBlock && b.canAcceptChild(mouseX, mouseY)) {
-        //     b.addChild(draggingBlock);
-        //     draggingBlock = null;
-        //     return;
-        // }
-        if (compoundHover) {
-            compoundHover.addChild(draggingBlock);
-            draggingBlock = null;
-            clickSound.play();
-            return;
-        }
-    }
-    if (compoundHover && draggingBlock) {
-        compoundHover.addChild(draggingBlock);
-        draggingBlock = null;
-        clickSound.play();
-        return;
-    }
-
-    // Drop in sidebar
-    // if (mouseX > SIDEBAR_X) {
-    //     // Make sure it's not already in the sidebar
-    //     if (!allBlocks.includes(draggingBlock)) {
-    //         allBlocks.push(draggingBlock);
-    //         removeBlock(draggingBlock); // Remove from code area or child
-    //     }
-    //     draggingBlock = null;
-    //     return;
-    // }
-
-    // Drop in code area
-    if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT) {
-        if (!(draggingBlock instanceof HeaderBlock)) {
-            blocks.splice(ghostIndex, 0, draggingBlock);
-            blocks = blocks.slice(0, NUM_LINES);
-            shiftBlocksUp();
-        } else {
-            if (blocks[ghostIndex] instanceof CompoundBlock && blocks[ghostIndex].canAcceptHeader(mouseX, mouseY, draggingBlock)) {
-                blocks[ghostIndex].acceptHeader(draggingBlock);
-            }
-        }
-        clickSound.play();
-    }
-
-    draggingBlock = null;
-}
-
 function shiftBlocksUp() {
     const newBlocks = [];
     for (let b of blocks) {
@@ -963,6 +1146,69 @@ function removeBlock(target) {
     // Search recursively through all compound blocks
     for (let block of blocks) {
         if (recursiveRemove(target, block)) return;
+    }
+
+    // If not found, check allBlocks
+
+    // If the block is a child or header of a sidebar compound block
+    for (let block of allBlocks) {
+        if (block instanceof CompoundBlock) {
+            // Check headers
+            for (let [key, headerBlock] of Object.entries(block.header)) {
+                if (headerBlock === target) {
+                    // Remove the reference but preserve the block
+                    delete block.header[key];
+
+                    // Add as standalone block if not already being handled by draggingBlock
+                    if (!draggingBlock || draggingBlock !== target) {
+                        // This should not happen normally, but just in case
+                        allBlocks.push(target);
+                    }
+                    return;
+                }
+            }
+
+            // Check children for IfElseBlock
+            if (block instanceof IfElseBlock) {
+                const ifIdx = block.ifSection.children.indexOf(target);
+                if (ifIdx !== -1) {
+                    block.ifSection.children.splice(ifIdx, 1);
+
+                    // Add as standalone block if not already being handled by draggingBlock
+                    if (!draggingBlock || draggingBlock !== target) {
+                        // This should not happen normally, but just in case
+                        allBlocks.push(target);
+                    }
+                    return;
+                }
+
+                const elseIdx = block.elseSection.children.indexOf(target);
+                if (elseIdx !== -1) {
+                    block.elseSection.children.splice(elseIdx, 1);
+
+                    // Add as standalone block if not already being handled by draggingBlock
+                    if (!draggingBlock || draggingBlock !== target) {
+                        // This should not happen normally, but just in case
+                        allBlocks.push(target);
+                    }
+                    return;
+                }
+            }
+            // Check children for other compound blocks
+            else if (block.children) {
+                const childIdx = block.children.indexOf(target);
+                if (childIdx !== -1) {
+                    block.children.splice(childIdx, 1);
+
+                    // Add as standalone block if not already being handled by draggingBlock
+                    if (!draggingBlock || draggingBlock !== target) {
+                        // This should not happen normally, but just in case
+                        allBlocks.push(target);
+                    }
+                    return;
+                }
+            }
+        }
     }
 }
 
