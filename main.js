@@ -319,13 +319,16 @@ function drawCodeLines() {
     fill(30, 35, 50);
     rect(CODE_AREA_START, CODE_Y_START - 60, LINE_NUMBER_WIDTH, NUM_LINES * LINE_HEIGHT + 90, 12, 0, 0, 12); // Scaled up from 40, 60, 8, 8
 
-    // Add a small heading for the function
-    fill(80, 180, 255);
     textSize(24); // Scaled up from 16
-    textStyle(BOLD);
     textAlign(LEFT, BASELINE);
-    text("function solution()", CODE_AREA_START + LINE_NUMBER_WIDTH + 15, CODE_Y_START - 15); // Scaled up from 10, 10
-    textStyle(NORMAL);
+    // Add a small heading for the function
+    fill(200, 100, 220); // Color for 'function'
+    text("function", CODE_AREA_START + LINE_NUMBER_WIDTH + 15, CODE_Y_START - 15);
+    let funcWidth = textWidth("function ");
+    fill(100, 200, 220); // Color for 'solution'
+    text("solution", CODE_AREA_START + LINE_NUMBER_WIDTH + 15 + funcWidth, CODE_Y_START - 15);
+    fill(220, 200, 100); // Color for '()'
+    text("()", CODE_AREA_START + LINE_NUMBER_WIDTH + 15 + funcWidth + textWidth("solution"), CODE_Y_START - 15);
 
     // Vertical separator line between line numbers and code
     stroke(60, 70, 90);
@@ -784,7 +787,7 @@ function drawTarget() {
     // Draw target value info with more prominence
     textSize(20);
     fill(255, 220, 150);
-    text(`Target: x = ${target}`, CODE_X, TITLE_Y_START + 30);
+    text(`Target: x == ${target}`, CODE_X, TITLE_Y_START + 30);
 
     // Add description if available
     if (desc) {

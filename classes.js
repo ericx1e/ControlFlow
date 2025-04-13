@@ -35,9 +35,8 @@ class CodeBlock {
 
     evaluate(x) {
         // remove let keyword
-        this.text = this.text.replace(/let\s+/g, "");
         try {
-            return new Function("x", `${this.text}; return x;`)(x);
+            return new Function("x", `${this.text.replace(/let\s+/g, "")}; return x;`)(x);
         } catch (e) {
             console.error("Error in block:", this.text);
             return x;
