@@ -60,8 +60,8 @@ class Problem {
       return this.completionCriteria(result);
     }
 
-    // Otherwise, check if result matches target value
-    return this.targetValue !== null && result === this.targetValue;
+    // Otherwise, check if result matches target value (round to 3 decimal places)
+    return this.targetValue !== null && result.toFixed(3) === this.targetValue.toFixed(3);
   }
 
   /**
@@ -654,7 +654,7 @@ class ProblemManager {
     const problem16 = new Problem(
       'p16',
       'Golden Ratio',
-      'Calculate the golden ratio (φ ≈ 1.618), one of mathematics\' most beautiful numbers.',
+      'Calculate the golden ratio (φ ≈ 1.618), one of mathematics\' most beautiful numbers. (Automatically round to 3 decimal places)',
       1,      // initial value
       1.618   // target value
     );

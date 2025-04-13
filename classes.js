@@ -25,7 +25,7 @@ class CodeBlock {
         if (this.isLocked) {
             fill('#664'); // Different color for locked blocks
         } else {
-            fill(isDragging ? '#557' : '#446');
+            fill(isDragging ? '#558' : '#447');
         }
         rect(this.x, this.y, this.w, this.h, 9); // Scaled up corner radius
         fill(255);
@@ -144,7 +144,7 @@ class CompoundBlock extends CodeBlock {
             maxWidth = headerWidth;
         }
 
-        this.w = max(baseWidth, maxWidth + 15); // set width with padding, scaled up from 10
+        this.w = lerp(this.w, max(baseWidth, maxWidth + 15), 0.1); // set width with padding, scaled up from 10
 
         // Now draw block shell
         noStroke();
@@ -161,8 +161,10 @@ class CompoundBlock extends CodeBlock {
                 const condBlock = this.getHeaderBlock(ConditionBlock);
                 fill(255);
                 text(`${this.text.split("(")[0]}(`, this.x + 15, this.y + 30); // Scaled up from 10, 20
-                condBlock.x = this.x + textWidth(`${this.text.split("(")[0]}(`) + 15; // Scaled up from 10
-                condBlock.y = this.y + 0; // Scaled up from 2
+                // condBlock.x = this.x + textWidth(`${this.text.split("(")[0]}(`) + 15; // Scaled up from 10
+                // condBlock.y = this.y + 0; // Scaled up from 2
+                condBlock.x = lerp(condBlock.x, this.x + textWidth(`${this.text.split("(")[0]}(`) + 15, 0.1);
+                condBlock.y = lerp(condBlock.y, this.y + 0, 0.1);
                 condBlock.draw();
                 text(`)`, condBlock.x + condBlock.w + 7.5, this.y + 30); // Scaled up from 5, 20
             } else {
@@ -198,8 +200,10 @@ class CompoundBlock extends CodeBlock {
         // Draw children
         let childY = this.y + this.h + 7.5; // Scaled up from 5
         for (let child of allChildren) {
-            child.x = this.x + 45; // Scaled up from 30
-            child.y = childY;
+            // child.x = this.x + 45; // Scaled up from 30
+            // child.y = childY;
+            child.x = lerp(child.x, this.x + 45, 0.1);
+            child.y = lerp(child.y, childY, 0.1);
             child.draw();
             childY += child.getHeightInLines() * LINE_HEIGHT;
         }
@@ -226,7 +230,7 @@ class HeaderBlock extends CodeBlock {
         noStroke();
         fill(50, 50, 50, 150);
         rect(this.x + 4.5, this.y + 4.5, this.w, this.h, 9); // Scaled up from 3, 3, 6
-        fill(isDragging ? '#6a6' : '#4b4');
+        fill(isDragging ? '#595' : '#494');
         rect(this.x, this.y, this.w, this.h, 9); // Scaled up from 6
         fill(255);
         text(this.text, this.x + 15, this.y + 25.5); // Scaled up from 10, 17
@@ -281,8 +285,10 @@ class ForLoopBlock extends CompoundBlock {
 
         const init = this.getHeaderBlock(InitBlock);
         if (init) {
-            init.x = offset;
-            init.y = this.y; // Scaled up from 2
+            // init.x = offset;
+            // init.y = this.y; // Scaled up from 2
+            init.x = lerp(init.x, offset, 0.1);
+            init.y = lerp(init.y, this.y, 0.1);
             init.draw();
             offset += init.w + 15; // Scaled up from 10
         } else {
@@ -295,8 +301,10 @@ class ForLoopBlock extends CompoundBlock {
 
         const cond = this.getHeaderBlock(ConditionBlock);
         if (cond) {
-            cond.x = offset;
-            cond.y = this.y; // Scaled up from 2
+            // cond.x = offset;
+            // cond.y = this.y; // Scaled up from 2
+            cond.x = lerp(cond.x, offset, 0.1);
+            cond.y = lerp(cond.y, this.y, 0.1);
             cond.draw();
             offset += cond.w + 15; // Scaled up from 10
         } else {
@@ -309,8 +317,10 @@ class ForLoopBlock extends CompoundBlock {
 
         const inc = this.getHeaderBlock(IncBlock);
         if (inc) {
-            inc.x = offset;
-            inc.y = this.y; // Scaled up from 2
+            // inc.x = offset;
+            // inc.y = this.y; // Scaled up from 2
+            inc.x = lerp(inc.x, offset, 0.1);
+            inc.y = lerp(inc.y, this.y, 0.1);
             inc.draw();
             offset += inc.w + 15; // Scaled up from 10
         } else {
@@ -465,8 +475,10 @@ class IfElseBlock extends CompoundBlock {
 
         const condBlock = this.getHeaderBlock(ConditionBlock);
         if (condBlock) {
-            condBlock.x = offset;
-            condBlock.y = this.y; // Scaled up from 2
+            // condBlock.x = offset;
+            // condBlock.y = this.y; // Scaled up from 2
+            condBlock.x = lerp(condBlock.x, offset, 0.1);
+            condBlock.y = lerp(condBlock.y, this.y, 0.1);
             condBlock.draw();
             offset += condBlock.w + 7.5; // Scaled up from 5
         } else {
@@ -571,8 +583,10 @@ class SectionBlock {
 
         let childY = this.y + 15; // Scaled up from 10
         for (let child of this.children) {
-            child.x = this.x + 15; // Scaled up from 10
-            child.y = childY;
+            // child.x = this.x + 15; // Scaled up from 10
+            // child.y = childY;
+            child.x = lerp(child.x, this.x + 15, 0.1);
+            child.y = lerp(child.y, childY, 0.1);
             child.draw();
             childY += child.getHeightInLines() * LINE_HEIGHT;
         }

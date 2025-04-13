@@ -18,6 +18,23 @@ function initializeItemPool() {
             rarity: 'common',
             block: () => new WhileBlock(0, 0)
         },
+
+        {
+            id: 'for_loop',
+            name: 'For Loop',
+            description: 'A classic for loop block.',
+            price: 5,
+            rarity: 'common',
+            block: () => new ForLoopBlock(0, 0)
+        },
+        {
+            id: 'while_loop',
+            name: 'While Loop',
+            description: 'Loop while a condition is true',
+            price: 7,
+            rarity: 'common',
+            block: () => new WhileBlock(0, 0)
+        },
         {
             id: 'if_else',
             name: 'If-Else Block',

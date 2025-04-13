@@ -270,9 +270,8 @@ function drawCodeLines() {
         let span = block.getHeightInLines();
 
         // Set block position - adjust to new layout
-        block.x = CODE_CONTENT_START;
-        block.y = currentY;
-        block.draw();
+        // block.x = CODE_CONTENT_START;
+        // block.y = currentY;
 
         // Compound hover highlight
         if (block instanceof CompoundBlock && block.canAcceptChild(mouseX, mouseY)) {
@@ -302,7 +301,7 @@ function drawCodeLines() {
             }
 
             // Draw horizontal separator lines (thinner and more subtle)
-            stroke(60, 70, 90, 150);
+            stroke(60, 70, 90, 50);
             strokeWeight(1.5); // Scaled up from 1
             line(CODE_AREA_START, currentY + j * LINE_HEIGHT, CODE_CONTENT_START + CODE_WIDTH, currentY + j * LINE_HEIGHT);
 
@@ -315,6 +314,10 @@ function drawCodeLines() {
             textAlign(LEFT);
             currentLine++;
         }
+
+        block.x = lerp(block.x, CODE_CONTENT_START, 0.1);
+        block.y = lerp(block.y, currentY, 0.1);
+        block.draw();
 
         currentY += LINE_HEIGHT * span;
     }
@@ -394,7 +397,7 @@ function findDeepestCompoundHover(blockList, mx, my) {
 function drawSidebar() {
     // Constants for sidebar layout
     const SIDEBAR_WIDTH = width - CODE_X - CODE_WIDTH;
-    const SIDEBAR_PADDING = 20;
+    const SIDEBAR_PADDING = 25;
     const SECTION_MARGIN = 15;
     const BLOCK_MARGIN = 10;
     const HEADER_SIZE = 22;
@@ -447,7 +450,7 @@ function drawSidebar() {
 
 // Refresh button
 const refreshButtonY = SHOP_Y_START + 10;
-const refreshButtonWidth = 110;
+const refreshButtonWidth = 200;
 const refreshButtonHeight = 30;
 const SHOP_WIDTH = 800;
 const refreshButtonX = SHOP_WIDTH / 2 - refreshButtonWidth / 2;
@@ -470,13 +473,17 @@ const itemWidth = (SHOP_WIDTH - 2 * padding - (itemsPerRow - 1) * padding) / 3;
 // Update drawShop to include the refresh button
 function drawShop() {
     noStroke();
+
+    // Drop shadow
+    fill(30, 30, 30, 150);
+    rect(0 + 5, SHOP_Y_START + 5, SHOP_WIDTH, height - SHOP_Y_START - 2, 10);
     // Shop background
     fill(40, 40, 50);
     rect(0, SHOP_Y_START, SHOP_WIDTH, height - SHOP_Y_START);
 
     // Shop header
     fill(60, 60, 70);
-    rect(0, SHOP_Y_START, SHOP_WIDTH, 50);
+    rect(0, SHOP_Y_START, SHOP_WIDTH, 50, 10, 10, 0, 0);
 
     fill(255);
     textSize(24);
@@ -524,10 +531,11 @@ function drawShop() {
     // Button text
     fill(255);
     textSize(14);
-    textAlign(CENTER, CENTER);
-    text(`Refresh   `, refreshButtonX + refreshButtonWidth / 2, refreshButtonY + refreshButtonHeight / 2);
+    textAlign(LEFT, CENTER);
+    text(`Refresh    `, refreshButtonX + 20, refreshButtonY + refreshButtonHeight / 2);
     fill(255, 215, 0);
-    text(shopRefreshCost, refreshButtonX + refreshButtonWidth - 20, refreshButtonY + refreshButtonHeight / 2);
+    textAlign(RIGHT, CENTER);
+    text(shopRefreshCost + ' coins', refreshButtonX + refreshButtonWidth - 20, refreshButtonY + refreshButtonHeight / 2);
     textAlign(LEFT, BASELINE);
 
     for (let i = 0; i < shopItems.length; i++) {
@@ -1235,7 +1243,7 @@ function findBlockAt(mx, my, blockList) {
 
 // Bring targetBlock to top of its layer
 function promoteBlock(block) {
-    // 1. allBlocks
+    // allBlocks
     const idx1 = allBlocks.indexOf(block);
     if (idx1 !== -1) {
         allBlocks.splice(idx1, 1);
@@ -1243,7 +1251,7 @@ function promoteBlock(block) {
         return;
     }
 
-    // 2. top-level blocks[]
+    // top-level blocks[]
     const idx2 = blocks.indexOf(block);
     if (idx2 !== -1) {
         blocks.splice(idx2, 1);
@@ -1251,7 +1259,7 @@ function promoteBlock(block) {
         return;
     }
 
-    // 3. children of compound blocks
+    // children of compound blocks
     for (let b of blocks) {
         if (b instanceof CompoundBlock) {
             // children

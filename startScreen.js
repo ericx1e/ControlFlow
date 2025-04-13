@@ -3,6 +3,8 @@ let titleSize = 120;
 let titlePulse = 0;
 let bgParticles = [];
 const NUM_PARTICLES = 100;
+let aboutPopupProgress = 0; // 0 = hidden, 1 = shown
+let aboutPopupTarget = 0;   // Where we want it to go (0 or 1)
 
 const symbols = ['0', '1', '#', '%', '&', '*', '+', '?', '!', '^', '~', '>', '<', '=', '|', '/', '\\', '(', ')', '{', '}', '[', ']', ':', ';'];
 
@@ -119,9 +121,21 @@ function drawStartScreen() {
     drawButton(aboutButton, "// ABOUT()", isMouseOver(aboutButton), glitchActive);
 
     // Draw the about popup if toggled
-    if (showAboutPopup) {
-        drawAboutPopup(glitchActive);
+
+    aboutPopupProgress = lerp(aboutPopupProgress, aboutPopupTarget, 0.2);
+
+    if (aboutPopupProgress > 0.1) {
+        drawAboutPopup(glitchActive, aboutPopupProgress);
     }
+
+
+
+    // if (showAboutPopup) {
+    //     drawAboutPopup(glitchActive);
+    //     // Smooth animation (linear interpolation)
+    //     aboutPopupProgress = lerp(aboutPopupProgress, aboutPopupTarget, 0.2);
+
+    // }
 
 }
 
@@ -134,9 +148,9 @@ function updateAndDrawParticles() {
 
         // Wrap around screen edges
         if (particle.x < -3 * particle.size) particle.x = width;
-        if (particle.x > width + 3 * particle.size) particle.x = 0;
-        if (particle.y < -3 * particle.size) particle.y = height;
-        if (particle.y > height + 3 * particle.size) particle.y = 0;
+        if (particle.x > width + 3 * particle.size) particle.x = -particle.size;
+        if (particle.y < -3 * particle.size) particle.y = height + particle.size;
+        if (particle.y > height + 3 * particle.size) particle.y = -particle.size;
 
         // scale particle size when further from center
         let distFromCenter = dist(particle.x, particle.y, width / 2, height / 2);
@@ -303,51 +317,53 @@ function handleStartMousePress() {
         return;
     }
 
-    if (showAboutPopup) {
-        showAboutPopup = false;
+    if (isMouseOver(aboutButton)) {
+        aboutPopupTarget = 1;
+        // showAboutPopup = true;
         selectSound.play();
         return;
-    }
-
-    if (isMouseOver(aboutButton)) {
-        showAboutPopup = true;
+    } else if (aboutPopupProgress > 0.1) {
+        aboutPopupTarget = 0;
         selectSound.play();
         return;
     }
 
 }
+function drawAboutPopup(glitch, progress) {
+    const popupW = 500 + 100 * progress;
+    const popupH = 300 + 100 * progress;
+    const popupX = width / 2 - popupW / 2;
+    const popupY = height / 2 - popupH / 2;
+    const alpha = 255 * progress;
 
-function drawAboutPopup(glitch) {
-    const popupX = width / 2 - 300;
-    const popupY = height / 2 - 200;
-    const popupW = 600;
-    const popupH = 400;
+    push();
+    translate(popupX, popupY);
+    noStroke();
 
     if (glitch) {
+        fill(random(200, 255), random(50, 150), 255, alpha);
         stroke(random(200, 255), random(50, 150), 255);
-        fill(random(200, 255), random(50, 150), 255);
-        rect(popupX, popupY, popupW, popupH, 10);
+        strokeWeight(2);
+        rect(0, 0, popupW, popupH, 10);
     }
 
-    // Background
-    fill(30, 35, 50, 230);
-    stroke(100, 150, 255);
+    fill(30, 35, 50, alpha);
+    stroke(100, 150, 255, alpha);
     strokeWeight(2);
-    rect(popupX, popupY, popupW, popupH, 10);
+    rect(0, 0, popupW, popupH, 10);
 
-    // Text
-    noStroke();
-    fill(220);
+    fill(220, alpha);
     textAlign(LEFT, TOP);
-    textSize(20);
+    textSize(17 + 3 * progress);
     let padding = 20;
     for (let i = 0; i < aboutText.length; i++) {
-        text(aboutText[i], popupX + padding, popupY + padding + i * 22);
+        text(aboutText[i], padding, padding + i * 22);
     }
 
-    // Close hint
     textAlign(RIGHT, BOTTOM);
     textSize(12);
-    fill(160);
-    text("Click anywhere to close", popupX + popupW - 10, popupY + popupH - 10);
+    fill(160, alpha);
+    text("Click anywhere to close", popupW - 10, popupH - 10);
+
+    pop();
 }
