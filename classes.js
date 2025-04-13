@@ -1,12 +1,11 @@
-
 class CodeBlock {
     constructor(text, x, y, isLocked = false) {
         this.text = text;
         this.x = x;
         this.y = y;
-        textSize(14);
+        textSize(21); // Scaled up from 14
         this.w = textWidth(text + '  ');
-        this.h = 30;
+        this.h = 45; // Scaled up from 30
         this.offsetX = 0;
         this.offsetY = 0;
         this.isLocked = isLocked
@@ -21,21 +20,22 @@ class CodeBlock {
         noStroke();
         // Drop shadow
         fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
+        rect(this.x + 4.5, this.y + 4.5, this.w, this.h, 9); // Scaled up shadow offset and corner radius
         // Main block
         if (this.isLocked) {
             fill('#664'); // Different color for locked blocks
         } else {
             fill(isDragging ? '#557' : '#446');
         }
-        rect(this.x, this.y, this.w, this.h, 6);
+        rect(this.x, this.y, this.w, this.h, 9); // Scaled up corner radius
         fill(255);
-        textSize(14);
-        text(this.text, this.x + 10, this.y + 20);
-
+        textSize(21); // Scaled up from 14
+        text(this.text, this.x + 15, this.y + 30); // Scaled up from 10, 20
     }
 
     evaluate(x) {
+        // remove let keyword
+        this.text = this.text.replace(/let\s+/g, "");
         try {
             return new Function("x", `${this.text}; return x;`)(x);
         } catch (e) {
@@ -70,10 +70,10 @@ class CompoundBlock extends CodeBlock {
         // for (let child of this.children) {
         //     childrenLineHeight += child.getHeightInLines();
         // }
-        const childAreaBottom = childAreaTop + (this.getHeightInLines() - 1) * LINE_HEIGHT + 10;
+        const childAreaBottom = childAreaTop + (this.getHeightInLines() - 1) * LINE_HEIGHT + 15; // Scaled up from 10
         return (
-            mx > this.x + 20 &&
-            mx < this.x + this.w - 20 &&
+            mx > this.x + 30 && // Scaled up from 20
+            mx < this.x + this.w - 30 && // Scaled up from 20
             my > childAreaTop &&
             my < childAreaBottom
         );
@@ -119,9 +119,9 @@ class CompoundBlock extends CodeBlock {
     }
 
     draw(isDragging = false) {
-        textSize(14);
+        textSize(21); // Scaled up from 14
         // First: calculate dynamic width based on children
-        let baseWidth = max(textWidth(this.text) + 40, this.baseWidth); // base for header
+        let baseWidth = max(textWidth(this.text) + 60, this.baseWidth); // base for header, scaled up from 40
         let maxWidth = 0;
 
         const allChildren = this instanceof IfElseBlock
@@ -129,7 +129,7 @@ class CompoundBlock extends CodeBlock {
             : this.children;
 
         for (let child of allChildren) {
-            const childWidth = 40 + child.w;
+            const childWidth = 60 + child.w; // Scaled up from 40
             if (childWidth > maxWidth) {
                 maxWidth = childWidth;
             }
@@ -144,15 +144,15 @@ class CompoundBlock extends CodeBlock {
             maxWidth = headerWidth;
         }
 
-        this.w = max(baseWidth, maxWidth + 10); // set width with padding
+        this.w = max(baseWidth, maxWidth + 15); // set width with padding, scaled up from 10
 
         // Now draw block shell
         noStroke();
         fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
+        rect(this.x + 4.5, this.y + 4.5, this.w, this.h, 9); // Scaled up from 3, 3, 6
 
         fill(isDragging ? '#966' : '#855');
-        rect(this.x, this.y, this.w, this.h, 6);
+        rect(this.x, this.y, this.w, this.h, 9); // Scaled up from 6
 
         // fill(255);
         // text(this.text, this.x + 10, this.y + 20);
@@ -160,26 +160,45 @@ class CompoundBlock extends CodeBlock {
             if (this.hasHeaderBlock(ConditionBlock)) {
                 const condBlock = this.getHeaderBlock(ConditionBlock);
                 fill(255);
-                text(`${this.text.split("(")[0]}(`, this.x + 10, this.y + 20);
-                condBlock.x = this.x + textWidth(`${this.text.split("(")[0]}(`) + 10;
-                condBlock.y = this.y + 2;
+                text(`${this.text.split("(")[0]}(`, this.x + 15, this.y + 30); // Scaled up from 10, 20
+                condBlock.x = this.x + textWidth(`${this.text.split("(")[0]}(`) + 15; // Scaled up from 10
+                condBlock.y = this.y + 0; // Scaled up from 2
                 condBlock.draw();
-                text(`)`, condBlock.x + condBlock.w + 5, this.y + 20);
+                text(`)`, condBlock.x + condBlock.w + 7.5, this.y + 30); // Scaled up from 5, 20
             } else {
                 fill(255);
-                text(`${this.text} (?)`, this.x + 10, this.y + 20);
+                text(`${this.text} (?)`, this.x + 15, this.y + 30); // Scaled up from 10, 20
             }
         }
 
         // Child container background
-        fill(50, 50, 50, 150);
+        // fill(50, 50, 50, 150);
+        if (this instanceof ForLoopBlock) {
+            // For loops get a blue-green tint
+            fill(40, 60, 70, 200);
+            stroke(70, 130, 180, 100); // Steel blue outline
+        } else if (this instanceof WhileBlock) {
+            // While loops get a purple tint
+            fill(50, 40, 70, 200);
+            stroke(120, 80, 160, 100); // Purple outline
+        } else if (this instanceof IfElseBlock) {
+            // If blocks get a warm tint
+            fill(60, 45, 50, 200);
+            stroke(160, 100, 80, 100); // Warm orange-brown outline
+        } else {
+            // Default color for other compound blocks
+            fill(45, 50, 65, 200);
+            stroke(80, 100, 140, 100); // Blue-grey outline
+        }
+        strokeWeight(1.5);
         let childHeight = this.getHeightInLines() - 1;
-        rect(this.x + 20, this.y + this.h, this.w - 20, childHeight * LINE_HEIGHT + 10, 6);
+        rect(this.x + 30, this.y + this.h, this.w - 30, childHeight * LINE_HEIGHT + 15, 9); // Scaled up from 20, 10, 6
+        noStroke();
 
         // Draw children
-        let childY = this.y + this.h + 5;
+        let childY = this.y + this.h + 7.5; // Scaled up from 5
         for (let child of allChildren) {
-            child.x = this.x + 30;
+            child.x = this.x + 45; // Scaled up from 30
             child.y = childY;
             child.draw();
             childY += child.getHeightInLines() * LINE_HEIGHT;
@@ -196,21 +215,21 @@ class CompoundBlock extends CodeBlock {
 
 class HeaderBlock extends CodeBlock {
     constructor(text, x, y) {
-        textSize(13);
+        textSize(19.5); // Scaled up from 13
         super(text, x, y);
         this.w = textWidth(text + '  ');
-        this.h = 25;
+        this.h = 37.5; // Scaled up from 25
     }
 
     draw(isDragging = false) {
-        textSize(13);
+        textSize(19.5); // Scaled up from 13
         noStroke();
         fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
+        rect(this.x + 4.5, this.y + 4.5, this.w, this.h, 9); // Scaled up from 3, 3, 6
         fill(isDragging ? '#6a6' : '#4b4');
-        rect(this.x, this.y, this.w, this.h, 6);
+        rect(this.x, this.y, this.w, this.h, 9); // Scaled up from 6
         fill(255);
-        text(this.text, this.x + 10, this.y + 17);
+        text(this.text, this.x + 15, this.y + 25.5); // Scaled up from 10, 17
     }
 
     isHeaderOnly() {
@@ -227,7 +246,8 @@ class ForLoopBlock extends CompoundBlock {
         // this.cond = "i < 3";
         // this.inc = "i++";
         this.body = this.children;
-        this.baseWidth = 170;
+        this.baseWidth = 255; // Scaled up from 170
+        this.h = 37.5; // Scaled up from 25
     }
 
     canAcceptHeader(mx, my, block) {
@@ -255,81 +275,51 @@ class ForLoopBlock extends CompoundBlock {
     draw(isDragging = false) {
         super.draw(isDragging);
         fill(255);
-        text("for (", this.x + 10, this.y + 20);
+        text("for (", this.x + 15, this.y + 24); // Scaled up from 10, 20
 
-        let offset = this.x + textWidth("for (") + 10;
+        let offset = this.x + textWidth("for (") + 15; // Scaled up from 10
 
         const init = this.getHeaderBlock(InitBlock);
         if (init) {
             init.x = offset;
-            init.y = this.y + 2;
+            init.y = this.y; // Scaled up from 2
             init.draw();
-            offset += init.w + 10;
+            offset += init.w + 15; // Scaled up from 10
         } else {
-            text("?", offset, this.y + 20);
-            offset += 20;
+            text("?", offset, this.y + 24); // Scaled up from 20
+            offset += 30; // Scaled up from 20
         }
 
-        text(";", offset, this.y + 20);
-        offset += 15;
+        text(";", offset, this.y + 24); // Scaled up from 20
+        offset += 22.5; // Scaled up from 15
 
         const cond = this.getHeaderBlock(ConditionBlock);
         if (cond) {
             cond.x = offset;
-            cond.y = this.y + 2;
+            cond.y = this.y; // Scaled up from 2
             cond.draw();
-            offset += cond.w + 10;
+            offset += cond.w + 15; // Scaled up from 10
         } else {
-            text("?", offset, this.y + 20);
-            offset += 20;
+            text("?", offset, this.y + 24); // Scaled up from 20
+            offset += 30; // Scaled up from 20
         }
 
-        text(";", offset, this.y + 20);
-        offset += 15;
+        text(";", offset, this.y + 24); // Scaled up from 20
+        offset += 22.5; // Scaled up from 15
 
         const inc = this.getHeaderBlock(IncBlock);
         if (inc) {
             inc.x = offset;
-            inc.y = this.y + 2;
+            inc.y = this.y; // Scaled up from 2
             inc.draw();
-            offset += inc.w + 10;
+            offset += inc.w + 15; // Scaled up from 10
         } else {
-            text("?", offset, this.y + 20);
-            offset += 20;
+            text("?", offset, this.y + 24);
+            offset += 30;
         }
 
-        text(")", offset, this.y + 20);
+        text(")", offset, this.y + 24); // Scaled up from 20
     }
-
-    /*
-    evaluate(x) {
-        try {
-            // let bodyCode = this.children.map(b => b.text).join("\n");
-            //let bodyCode = this.children.map(b => b.text?.trim?.() || "// empty").filter(Boolean).join("\n");
-            //return new Function("x", `${this.init}; while(${this.cond}) { ${bodyCode}; ${this.inc}; } return x;`)(x);
-
-            const initBlock = this.getHeaderBlock(InitBlock);
-            const condBlock = this.getHeaderBlock(ConditionBlock);
-            const incBlock = this.getHeaderBlock(IncBlock);
-
-            if (!initBlock || !condBlock || !incBlock) {
-                console.warn("Missing header blocks in for-loop");
-                return x;
-            }
-
-            for (let i = initBlock.value; eval(condBlock.text); i += incBlock.value) {
-                // console.log(i);
-                for (let child of this.children) {
-                    x = child.evaluate(x);
-                }
-            }
-            return x;
-        } catch (e) {
-            console.error("Loop Error:", e);
-            return x;
-        }
-    }
-    */
 
     evaluate(x) {
         try {
@@ -392,7 +382,7 @@ class ForLoopBlock extends CompoundBlock {
 class AddIBlock extends CodeBlock {
     constructor(x, y) {
         super("x += i;", x, y);
-        this.w = 100;
+        this.w = 150; // Scaled up from 100
         this.color = color(100, 160, 220);
     }
 
@@ -420,10 +410,10 @@ class IfElseBlock extends CompoundBlock {
     constructor(x, y) {
         super("if (...) { } else { }", x, y);
         // this.cond = "x % 2 === 0";
-        this.ifSection = new SectionBlock("if", x, y + 35);
-        this.elseSection = new SectionBlock("else", x, y + 100);
-        this.baseWidth = 280;
-        this.h = 25;
+        this.ifSection = new SectionBlock("if", x, y + 52.5); // Scaled up from 35
+        this.elseSection = new SectionBlock("else", x, y + 150); // Scaled up from 100
+        this.baseWidth = 420; // Scaled up from 280
+        this.h = 37.5; // Scaled up from 25
     }
 
     canAcceptChild(mx, my) {
@@ -459,52 +449,51 @@ class IfElseBlock extends CompoundBlock {
 
     draw(isDragging = false) {
         noStroke();
-        textSize(14);
+        textSize(21); // Scaled up from 14
 
         // Draw IF container
         fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
+        rect(this.x + 4.5, this.y + 4.5, this.w, this.h, 9); // Scaled up from 3, 3, 6
         fill(isDragging ? '#559' : '#458');
-        rect(this.x, this.y, this.w, this.h, 6);
+        rect(this.x, this.y, this.w, this.h, 9); // Scaled up from 6
 
         // Draw IF header
         fill(255);
-        let offset = this.x + 10;
-        text("if (", offset, this.y + 16);
+        let offset = this.x + 15; // Scaled up from 10
+        text("if (", offset, this.y + 24); // Scaled up from 16
         offset += textWidth("if (");
 
         const condBlock = this.getHeaderBlock(ConditionBlock);
         if (condBlock) {
             condBlock.x = offset;
-            condBlock.y = this.y + 2;
+            condBlock.y = this.y; // Scaled up from 2
             condBlock.draw();
-            offset += condBlock.w + 5;
+            offset += condBlock.w + 7.5; // Scaled up from 5
         } else {
-            text("?", offset, this.y + 16);
-            offset += 20;
+            text("?", offset, this.y + 24); // Scaled up from 16
+            offset += 30; // Scaled up from 20
         }
 
-        text(")", offset, this.y + 15);
+        text(")", offset, this.y + 24); // Scaled up from 15
 
         // IF section
-        this.ifSection.x = this.x + 20;
+        this.ifSection.x = this.x + 30; // Scaled up from 20
         this.ifSection.y = this.y + this.h;
         this.ifSection.draw();
 
         // Draw ELSE container
         fill(50, 50, 50, 150);
-        rect(this.x + 3, this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10, this.w, this.h, 6);
-        // rect(this.x, this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10, this.w, this.h, 6);
+        rect(this.x + 4.5, this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 15, this.w, this.h, 9); // Scaled up from 3, 10, 6
 
         // ELSE block header
-        const elseY = this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 10;
+        const elseY = this.ifSection.y + this.ifSection.getHeightInLines() * LINE_HEIGHT + 15; // Scaled up from 10
         fill(isDragging ? '#559' : '#458');
-        rect(this.x, elseY, this.w, this.h, 6);
+        rect(this.x, elseY, this.w, this.h, 9); // Scaled up from 6
         fill(255);
-        text("else", this.x + 10, elseY + 16);
+        text("else", this.x + 15, elseY + 24); // Scaled up from 10, 16
 
         // ELSE section
-        this.elseSection.x = this.x + 20;
+        this.elseSection.x = this.x + 30; // Scaled up from 20
         this.elseSection.y = elseY + this.h;
         this.elseSection.draw();
     }
@@ -550,8 +539,8 @@ class SectionBlock {
 
     canAcceptChild(mx, my) {
         const top = this.y;
-        const bottom = top + this.getHeightInLines() * LINE_HEIGHT + 10;
-        return mx > this.x && mx < this.x + 240 && my > top && my < bottom;
+        const bottom = top + this.getHeightInLines() * LINE_HEIGHT + 15; // Scaled up from 10
+        return mx > this.x && mx < this.x + 360 && my > top && my < bottom; // Scaled up from 240
     }
 
     addChild(block) {
@@ -563,15 +552,26 @@ class SectionBlock {
     }
 
     draw() {
-        fill(70);
-        textSize(14);
+        // Use a slightly different color for if/else sections
+        if (this.label === "if") {
+            fill(70, 55, 60, 200); // Warmer color for if
+            stroke(160, 100, 80, 70);
+        } else if (this.label === "else") {
+            fill(60, 55, 70, 200); // Slightly purple for else
+            stroke(140, 100, 120, 70);
+        } else {
+            fill(50, 55, 65, 200); // Default section color
+            stroke(80, 100, 140, 70);
+        }
+        textSize(21); // Scaled up from 14
         // text(this.label, this.x + 5, this.y + 15);
-        fill(50, 50, 50, 150);
-        rect(this.x, this.y, 240, this.getHeightInLines() * LINE_HEIGHT + 10, 6);
+        strokeWeight(1.5);
+        rect(this.x, this.y, 360, this.getHeightInLines() * LINE_HEIGHT + 15, 9); // Scaled up from 240, 10, 6
+        noStroke();
 
-        let childY = this.y + 10;
+        let childY = this.y + 15; // Scaled up from 10
         for (let child of this.children) {
-            child.x = this.x + 10;
+            child.x = this.x + 15; // Scaled up from 10
             child.y = childY;
             child.draw();
             childY += child.getHeightInLines() * LINE_HEIGHT;
@@ -585,7 +585,7 @@ class WhileBlock extends CompoundBlock {
         // this.cond = "x < 10";
         this.condBlock = null;  // holds the ConditionBlock instance
         // this.text = `while (${this.cond})`;
-        this.baseWidth = 110;
+        this.baseWidth = 165; // Scaled up from 110
     }
 
     evaluate_cond(x) {
@@ -595,42 +595,6 @@ class WhileBlock extends CompoundBlock {
         return eval(`x ${cond} ${val}`);
     }
 
-    /*
-    evaluate(x) {
-        try {
-            //if (this.children.length === 0) return x; // Avoid infinite loop
-            //while (new Function("x", `return ${this.cond}`)(x)) {
-            //for (let child of this.children) x = child.evaluate(x);
-            //}
-
-            const condBlock = this.getHeaderBlock(ConditionBlock);
-
-            if (!condBlock) {
-                console.warn("Missing header blocks in while-loop");
-                return x;
-            }
-
-            let maxIterations = 10000;
-            let count = 0;
-
-            while (condBlock.evaluateCondition(x) && count++ < maxIterations) {
-                // console.log(x)
-                for (let child of this.children) {
-                    x = child.evaluate(x);
-                }
-            }
-
-            if (count >= maxIterations) {
-                console.warn("Max iterations reached")
-            }
-
-            return x;
-        } catch (e) {
-            console.error("While Error:", e);
-        }
-        return x;
-    }
-        */
     evaluate(x) {
         try {
             const condBlock = this.getHeaderBlock(ConditionBlock);
@@ -646,7 +610,7 @@ class WhileBlock extends CompoundBlock {
 
             while (condBlock.evaluateCondition(result) && count++ < maxIterations) {
                 for (let child of this.children) {
-                    prevVal = result;
+                    let prevVal = result;
                     result = child.evaluate(result);
 
                     // Check for break
@@ -679,19 +643,19 @@ class WhileBlock extends CompoundBlock {
 class BreakBlock extends CodeBlock {
     constructor(x, y) {
         super("break;", x, y);
-        this.w = 100;
+        this.w = 150; // Scaled up from 100
         this.color = color(200, 100, 70);
     }
 
     draw(isDragging = false) {
-        textSize(14);
+        textSize(21); // Scaled up from 14
         // Drop shadow
         fill(50, 50, 50, 150);
-        rect(this.x + 3, this.y + 3, this.w, this.h, 6);
+        rect(this.x + 4.5, this.y + 4.5, this.w, this.h, 9); // Scaled up from 3, 3, 6
 
         // Main block
         fill(this.isLocked ? '#865' : (isDragging ? '#a65' : this.color));
-        rect(this.x, this.y, this.w, this.h, 6);
+        rect(this.x, this.y, this.w, this.h, 9); // Scaled up from 6
 
         fill(255);
         textAlign(CENTER, CENTER);
@@ -717,7 +681,7 @@ class BreakBlock extends CodeBlock {
 class PrintBlock extends CodeBlock {
     constructor(x, y) {
         super("print(x);", x, y);
-        this.w = 120;
+        this.w = 180; // Scaled up from 120
     }
 
     evaluate(x) {
@@ -737,7 +701,12 @@ class ConditionBlock extends HeaderBlock {
 
     evaluateCondition(x) {
         try {
-            return new Function("x", `return (${this.text});`)(x);
+            // Create a function that has access to both x and loopVariables
+            // This allows conditions to reference the loop variable i
+            return new Function("x", "loopVariables",
+                `const i = loopVariables.i; // Make i available if it exists
+             return (${this.text});`
+            )(x, loopVariables);
         } catch (e) {
             console.error("ConditionBlock Error:", e, "text:", this.text);
             return false;
@@ -808,3 +777,6 @@ class IncBlock extends HeaderBlock {
     }
 }
 
+// Note: LINE_HEIGHT constant should also be scaled by 1.5x
+// Add this at the top of your code, assuming it was previously defined:
+// const LINE_HEIGHT = 30; // Scaled up from 20 (assuming original was 20)

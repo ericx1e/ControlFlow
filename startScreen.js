@@ -6,7 +6,27 @@ const NUM_PARTICLES = 100;
 
 const symbols = ['0', '1', '#', '%', '&', '*', '+', '?', '!', '^', '~', '>', '<', '=', '|', '/', '\\', '(', ')', '{', '}', '[', ']', ':', ';'];
 
+const aboutText = [
+    "In this world, you are tasked with solving",
+    "coding challenges using only the blocks",
+    "you’re given. But not all problems are fair.",
+    "",
+    "Rumors speak of an underground system—",
+    "a shadowy shop where code fragments are sold.",
+    "It’s not sanctioned, but it might be necessary.",
+    "",
+    "Use it wisely. Some solutions can’t be built",
+    "with what you’re told is 'enough'.",
+    "",
+    "Trace your code carefully—one wrong answer",
+    "is the end."
+];
+
+let showAboutPopup = false;
+
+
 let startButton = { x: 400, y: 400, width: 200, height: 60 };
+let aboutButton = { x: 400, y: 480, width: 200, height: 40 };
 let glitchTimer = 0;
 let glitchActive = false;
 let driftOffsetX = 0;
@@ -34,6 +54,7 @@ function setupStartScreen() {
     }
 
     startButton = { x: width / 2 - 200, y: height * 3 / 4 - 40, width: 400, height: 60 };
+    aboutButton = { x: width / 2 - 200, y: height * 3 / 4 + 40, width: 400, height: 60 };
 }
 
 
@@ -43,9 +64,9 @@ function drawStartScreen() {
     background(20, 25, 40);
 
     // Handle glitch timing
-    if (frameCount % 80 === 0 && random() < 0.6) {
+    if (frameCount % 70 === 0 && random() < 0.7) {
         glitchActive = true;
-        glitchTimer = 10; // glitch lasts ~10 frames
+        glitchTimer = random(8, 12); // glitch lasts ~10 frames
     }
 
     if (glitchTimer > 0) {
@@ -92,21 +113,16 @@ function drawStartScreen() {
     textSize(20);
     fill(180, 210, 255);
     text("Block by Block, Control Emerges", width / 2, 270);
-
-    // Draw decorative code brackets
     drawCodeBrackets();
-
-    // Start button
     drawButton(startButton, ">> START()", isMouseOver(startButton), glitchActive);
-
-    // Version info
-    textSize(12);
-    textAlign(RIGHT, BOTTOM);
-    fill(150);
-    text("v1.0.0", width - 20, height - 20);
-
-    // Reset text alignment
     textAlign(LEFT, BASELINE);
+    drawButton(aboutButton, "// ABOUT()", isMouseOver(aboutButton), glitchActive);
+
+    // Draw the about popup if toggled
+    if (showAboutPopup) {
+        drawAboutPopup(glitchActive);
+    }
+
 }
 
 // Update and draw background particles
@@ -133,7 +149,7 @@ function updateAndDrawParticles() {
         // ellipse(particle.x, particle.y, particle.size);
         textSize(size);
         fill(particle.color);
-
+        textAlign(CENTER, CENTER);
         text(particle.char, particle.x, particle.y);
 
         if (glitchActive) {
@@ -184,9 +200,10 @@ function drawGradientText(txt, x, y, glitch = false) {
 // Draw decorative code brackets
 function drawCodeBrackets() {
     textSize(100);
+    textAlign(CENTER, CENTER);
     fill(80, 100, 150, 100);
-    text("{", 200, height / 4 * 3);
-    text("}", width - 200, height / 4 * 3);
+    text("{", 200, height / 4 * 3 + 30);
+    text("}", width - 200, height / 4 * 3 + 40);
 
     // Draw control flow symbols
     // textSize(24);
@@ -273,12 +290,64 @@ function handleStartMousePress() {
         setupShopSystem()
 
         const firstProblem = problemManager.getProblem(problemManager.problemOrder[0]);
-        loadNextProblem(firstProblem);
+        loadNextProblem(firstProblem, false);
 
-
-        currentState = "GAMEPLAY";
         glitchSound.stop();
+        selectSound.play();
+
+        // currentState = "GAMEPLAY";
+        startTransition("fade", function () {
+            currentState = "GAMEPLAY";
+            glitchSound.stop();
+        });
+        return;
+    }
+
+    if (showAboutPopup) {
+        showAboutPopup = false;
         selectSound.play();
         return;
     }
+
+    if (isMouseOver(aboutButton)) {
+        showAboutPopup = true;
+        selectSound.play();
+        return;
+    }
+
+}
+
+function drawAboutPopup(glitch) {
+    const popupX = width / 2 - 300;
+    const popupY = height / 2 - 200;
+    const popupW = 600;
+    const popupH = 400;
+
+    if (glitch) {
+        stroke(random(200, 255), random(50, 150), 255);
+        fill(random(200, 255), random(50, 150), 255);
+        rect(popupX, popupY, popupW, popupH, 10);
+    }
+
+    // Background
+    fill(30, 35, 50, 230);
+    stroke(100, 150, 255);
+    strokeWeight(2);
+    rect(popupX, popupY, popupW, popupH, 10);
+
+    // Text
+    noStroke();
+    fill(220);
+    textAlign(LEFT, TOP);
+    textSize(20);
+    let padding = 20;
+    for (let i = 0; i < aboutText.length; i++) {
+        text(aboutText[i], popupX + padding, popupY + padding + i * 22);
+    }
+
+    // Close hint
+    textAlign(RIGHT, BOTTOM);
+    textSize(12);
+    fill(160);
+    text("Click anywhere to close", popupX + popupW - 10, popupY + popupH - 10);
 }

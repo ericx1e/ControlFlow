@@ -1,9 +1,5 @@
-// p5.js Game: Balatro-inspired Code Roguelike
-// Features: Drag-and-drop code blocks, Compound loops, Dynamic layout, Save/load, Interpreter
-// import { Problem, User, ProblemManager } from './states.js';
-
 const NUM_LINES = 40;
-const LINE_HEIGHT = 35;
+const LINE_HEIGHT = 52;
 const CODE_X = 100;
 const CODE_Y_START = 130;
 const TITLE_Y_START = 25;
@@ -30,7 +26,7 @@ let showPopup = false;
 let popupType = ""; // "success" or "failure"
 let popupTimer = 0;
 let popupDuration = 2000; // milliseconds for failure popup
-let shopRefreshCost = 3; // Cost to refresh the shop
+let shopRefreshCost = 2; // Cost to refresh the shop
 let allPossibleItems = []; // Will hold all possible shop items
 let shopSize = 3; // Number of items shown in the shop at once
 let shopItems = [];
@@ -44,6 +40,60 @@ let glitchSound;
 let coinSound;
 let played = false
 
+let transitionActive = false;
+let transitionType = ""; // "fade", "problem", etc.
+let transitionProgress = 0;
+let transitionDuration = 30; // frames
+let transitionCallback = null;
+let transitionStartTime = 0;
+
+// Function to start a transition
+function startTransition(type, callback) {
+    transitionActive = true;
+    transitionType = type;
+    transitionProgress = 0;
+    transitionCallback = callback;
+    transitionStartTime = millis();
+}
+
+function drawTransitionOverlay() {
+    let alpha;
+
+    if (transitionType === "fade") {
+        // Simple fade transition (0 -> 255 -> 0)
+        alpha = transitionProgress < 0.5
+            ? map(transitionProgress, 0, 0.5, 0, 255)
+            : map(transitionProgress, 0.5, 1, 255, 0);
+
+        // Draw semi-transparent overlay
+        fill(0, alpha);
+        noStroke();
+        rect(0, 0, width, height);
+    }
+    else if (transitionType === "problem") {
+        // Problem transition - slide in and out
+        alpha = transitionProgress < 0.5
+            ? map(transitionProgress, 0, 0.5, 0, 220)
+            : map(transitionProgress, 0.5, 1, 220, 0);
+
+        // Draw overlay with gradient
+        noStroke();
+        fill(20, 30, 50, alpha);
+        rect(0, 0, width, height);
+
+        // Add some visual flair - animated code lines
+        stroke(60, 120, 200, alpha * 0.3);
+        strokeWeight(2);
+
+        for (let i = 0; i < 15; i++) {
+            const y = (height / 15) * i;
+            const xOffset = sin(frameCount * 0.05 + i * 0.5) * 100;
+            const lineLength = map(noise(i * 0.1, frameCount * 0.01), 0, 1, width * 0.3, width * 0.7);
+
+            line(xOffset, y, xOffset + lineLength, y);
+        }
+    }
+}
 
 function preload() {
     loseSound = loadSound('sounds/vine-boom.mp3');
@@ -133,6 +183,23 @@ function setup() {
 
 // Modified draw function to use the game state
 function draw() {
+    if (transitionActive) {
+        // Update transition progress
+        const elapsedTime = millis() - transitionStartTime;
+        transitionProgress = min(1, elapsedTime / (transitionDuration * 16.67)); // Convert frames to milliseconds (assuming 60fps)
+
+        // Execute callback at halfway point (when screen is fully obscured)
+        if (transitionProgress >= 0.5 && transitionCallback) {
+            transitionCallback();
+            transitionCallback = null;
+        }
+
+        // End transition when complete
+        if (transitionProgress >= 1) {
+            transitionActive = false;
+        }
+    }
+
     switch (currentState) {
         case "START_SCREEN":
             drawStartScreen();
@@ -154,39 +221,41 @@ function draw() {
             drawPopup()
             break;
     }
+    if (transitionActive) {
+        drawTransitionOverlay();
+    }
 }
 
 function drawCodeLines() {
-    // Constants for the shifted layout
-    const LINE_NUMBER_WIDTH = 60;
-    const CODE_AREA_START = 5; // Start at the left edge
-    // const CODE_CONTENT_START = CODE_AREA_START + LINE_NUMBER_WIDTH + 2; // Where the actual code blocks begin
+    // Constants for the shifted layout - all scaled by 1.5x
+    const LINE_NUMBER_WIDTH = 90; // Scaled up from 60
+    const CODE_AREA_START = 0; // Scaled up from 5
     const CODE_CONTENT_START = CODE_X;
 
     // Code area background with a subtle gradient
     noStroke();
     fill(35, 40, 55); // Base color
-    rect(CODE_AREA_START, CODE_Y_START - 40, CODE_WIDTH + 90, NUM_LINES * LINE_HEIGHT + 60, 8);
+    rect(CODE_AREA_START, CODE_Y_START - 60, CODE_WIDTH + 135, NUM_LINES * LINE_HEIGHT + 90, 12); // Scaled up from 40, 90, 60, 8
 
     // Add a subtle inner shadow at the top
     fill(25, 30, 45, 100);
-    rect(CODE_AREA_START, CODE_Y_START - 40, CODE_WIDTH + 90, 12, 8, 8, 0, 0);
+    rect(CODE_AREA_START, CODE_Y_START - 60, CODE_WIDTH + 135, 18, 12, 12, 0, 0); // Scaled up from 40, 90, 12, 8, 8
 
     // Line number area with different background
     fill(30, 35, 50);
-    rect(CODE_AREA_START, CODE_Y_START - 40, LINE_NUMBER_WIDTH, NUM_LINES * LINE_HEIGHT + 60, 8, 0, 0, 8);
+    rect(CODE_AREA_START, CODE_Y_START - 60, LINE_NUMBER_WIDTH, NUM_LINES * LINE_HEIGHT + 90, 12, 0, 0, 12); // Scaled up from 40, 60, 8, 8
 
     // Add a small heading for the function
     fill(80, 180, 255);
-    textSize(16);
+    textSize(24); // Scaled up from 16
     textStyle(BOLD);
-    text("function solution()", CODE_AREA_START + LINE_NUMBER_WIDTH + 10, CODE_Y_START - 10);
+    text("function solution()", CODE_AREA_START + LINE_NUMBER_WIDTH + 15, CODE_Y_START - 15); // Scaled up from 10, 10
     textStyle(NORMAL);
 
     // Vertical separator line between line numbers and code
     stroke(60, 70, 90);
-    strokeWeight(2);
-    line(CODE_AREA_START + LINE_NUMBER_WIDTH, CODE_Y_START - 30, CODE_AREA_START + LINE_NUMBER_WIDTH, CODE_Y_START + NUM_LINES * LINE_HEIGHT + 10);
+    strokeWeight(3); // Scaled up from 2
+    line(CODE_AREA_START + LINE_NUMBER_WIDTH, CODE_Y_START - 45, CODE_AREA_START + LINE_NUMBER_WIDTH, CODE_Y_START + NUM_LINES * LINE_HEIGHT + 15); // Scaled up from 30, 10
     noStroke();
 
     ghostIndex = -1;
@@ -222,7 +291,7 @@ function drawCodeLines() {
         // Draw line numbers with improved styling
         stroke(100);
         fill(160, 180, 220);
-        textSize(13);
+        textSize(19.5); // Scaled up from 13
 
         for (let j = 0; j < span; j++) {
             // Draw line itself with subtle alternating background
@@ -234,14 +303,15 @@ function drawCodeLines() {
 
             // Draw horizontal separator lines (thinner and more subtle)
             stroke(60, 70, 90, 150);
-            strokeWeight(1);
+            strokeWeight(1.5); // Scaled up from 1
             line(CODE_AREA_START, currentY + j * LINE_HEIGHT, CODE_CONTENT_START + CODE_WIDTH, currentY + j * LINE_HEIGHT);
 
             // Draw line numbers with better alignment
             noStroke();
             fill(150, 160, 190);
             textAlign(RIGHT);
-            text(`${currentLine + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 5, currentY + j * LINE_HEIGHT + 18);
+            textSize(19.5);
+            text(`${currentLine + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 7.5, currentY + j * LINE_HEIGHT + 27); // Scaled up from 5, 18
             textAlign(LEFT);
             currentLine++;
         }
@@ -251,19 +321,19 @@ function drawCodeLines() {
 
     // One more line for the last block
     // stroke(60, 70, 90, 150);
-    // strokeWeight(1);
+    // strokeWeight(1.5); // Scaled up from 1
     // fill(150, 160, 190);
     // if (blocks.length > 0) {
     //     line(CODE_AREA_START, currentY, CODE_CONTENT_START + CODE_WIDTH, currentY);
     //     noStroke();
     //     textAlign(RIGHT);
-    //     text(`${currentLine + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 5, currentY + 18);
+    //     text(`${currentLine + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 7.5, currentY + 27); // Scaled up from 5, 18
     //     textAlign(LEFT);
     // }
 
     // Add subtle grid markers on empty lines
     // stroke(60, 70, 90, 80);
-    // strokeWeight(1);
+    // strokeWeight(1.5); // Scaled up from 1
     // for (let i = currentLine; i < NUM_LINES; i++) {
     //     // Alternating background for empty lines
     //     if ((i % 2) === 0) {
@@ -280,7 +350,7 @@ function drawCodeLines() {
     //     noStroke();
     //     fill(110, 120, 150); // Dimmer color for empty lines
     //     textAlign(RIGHT);
-    //     text(`${i + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 5, CODE_Y_START + i * LINE_HEIGHT + 18);
+    //     text(`${i + 1}`, CODE_AREA_START + LINE_NUMBER_WIDTH - 7.5, CODE_Y_START + i * LINE_HEIGHT + 27); // Scaled up from 5, 18
     //     textAlign(LEFT);
     // }
 
@@ -298,7 +368,7 @@ function drawCodeLines() {
 
     // Reset styling
     noStroke();
-    textSize(16);
+    textSize(24); // Scaled up from 16
 }
 
 function findDeepestCompoundHover(blockList, mx, my) {
@@ -789,30 +859,108 @@ function findDeepestCompoundHover(blockList, mx, my) {
     return deepestHover;
 }
 
-// Update mouseReleased to work better with compound blocks and headers
+
+// Modify mousePressed to properly handle headers in nested compound blocks
+function findCompoundBlockContaining(targetBlock, blockList) {
+    for (let block of blockList) {
+        if (!block) continue;
+
+        // If this is a compound block, check its headers first
+        if (block instanceof CompoundBlock) {
+            for (let [key, headerBlock] of Object.entries(block.header)) {
+                if (headerBlock === targetBlock) {
+                    return block;
+                }
+            }
+
+            // If it's an if-else block, check both sections
+            if (block instanceof IfElseBlock) {
+                if (block.ifSection.children.includes(targetBlock) ||
+                    block.elseSection.children.includes(targetBlock)) {
+                    return block;
+                }
+
+                // Recursively check deeper in if section
+                const ifResult = findCompoundBlockContaining(targetBlock, block.ifSection.children);
+                if (ifResult) return ifResult;
+
+                // Recursively check deeper in else section
+                const elseResult = findCompoundBlockContaining(targetBlock, block.elseSection.children);
+                if (elseResult) return elseResult;
+            }
+            // Regular compound block
+            else if (block.children) {
+                if (block.children.includes(targetBlock)) {
+                    return block;
+                }
+
+                // Recursively check children
+                const result = findCompoundBlockContaining(targetBlock, block.children);
+                if (result) return result;
+            }
+        }
+    }
+
+    return null;
+}
+
 function mouseReleased() {
     if (!draggingBlock) return;
 
-    // Check for inserting into compound blocks
-    if (compoundHover && draggingBlock) {
+    // Check for compound block drop targets
+    if (compoundHover && draggingBlock && !(draggingBlock instanceof HeaderBlock)) {
         compoundHover.addChild(draggingBlock);
         draggingBlock = null;
         clickSound.play();
         return;
     }
 
-    // Check for header insertion in compound blocks
-    if (draggingBlock instanceof HeaderBlock && ghostIndex !== -1) {
-        const targetBlock = blocks[ghostIndex];
-        if (targetBlock instanceof CompoundBlock && targetBlock.canAcceptHeader(mouseX, mouseY, draggingBlock)) {
-            targetBlock.acceptHeader(draggingBlock);
-            draggingBlock = null;
-            clickSound.play();
-            return;
+    // Handle header insertion for both top-level and nested compound blocks
+    if (draggingBlock instanceof HeaderBlock) {
+        // First check at the top level
+        for (let i = 0; i < blocks.length; i++) {
+            const block = blocks[i];
+            if (block instanceof CompoundBlock && block.canAcceptHeader(mouseX, mouseY, draggingBlock)) {
+                block.acceptHeader(draggingBlock);
+                draggingBlock = null;
+                clickSound.play();
+                return;
+            }
+        }
+
+        // Then check for nested compound blocks in a recursive manner
+        const findAndAttachToNestedCompound = (blockList) => {
+            for (let block of blockList) {
+                if (!block) continue;
+
+                if (block instanceof CompoundBlock && block.canAcceptHeader(mouseX, mouseY, draggingBlock)) {
+                    block.acceptHeader(draggingBlock);
+                    draggingBlock = null;
+                    clickSound.play();
+                    return true;
+                }
+
+                // If this is a compound block, check its children recursively
+                if (block instanceof CompoundBlock) {
+                    if (block instanceof IfElseBlock) {
+                        // Check both sections
+                        if (findAndAttachToNestedCompound(block.ifSection.children)) return true;
+                        if (findAndAttachToNestedCompound(block.elseSection.children)) return true;
+                    } else if (block.children) {
+                        if (findAndAttachToNestedCompound(block.children)) return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+        // Search through all blocks recursively
+        if (findAndAttachToNestedCompound(blocks)) {
+            return; // Successfully attached to a nested compound block
         }
     }
 
-    // Drop in code area (regular line insertion)
+    // The rest of your existing mouseReleased code for other cases
     if (ghostIndex !== -1 && mouseX < CODE_X + CODE_WIDTH && mouseY < CODE_Y_START + NUM_LINES * LINE_HEIGHT) {
         if (!(draggingBlock instanceof HeaderBlock)) {
             blocks.splice(ghostIndex, 0, draggingBlock);
@@ -821,7 +969,7 @@ function mouseReleased() {
         }
         clickSound.play();
     } else {
-        // Drop in sidebar
+        // Drop in sidebar if not placed in code area
         if (!allBlocks.includes(draggingBlock)) {
             allBlocks.push(draggingBlock);
         }
@@ -831,6 +979,11 @@ function mouseReleased() {
 }
 
 // Add this function to draw the popup
+let popupButtonX = 1440 / 2 - 75;
+let popupButtonY = 0;
+let popupButtonWidth = 150;
+let popupButtonHeight = 50;
+
 function drawPopup() {
     if (!showPopup) return;
 
@@ -840,9 +993,10 @@ function drawPopup() {
 
     // Popup container
     let popupWidth = 400;
-    let popupHeight = popupType === "success" ? 200 : 150;
+    let popupHeight = popupType === "success" ? 250 : 150;
     let popupX = width / 2 - popupWidth / 2;
     let popupY = height / 2 - popupHeight / 2;
+    popupButtonY = popupY + 150;
 
     // Shadow
     fill(30, 30, 30, 200);
@@ -865,30 +1019,32 @@ function drawPopup() {
         text("Level Complete!", width / 2, popupY + 50);
 
         // Next level button
-        let buttonX = width / 2 - 75;
-        let buttonY = popupY + 100;
-        let buttonWidth = 150;
-        let buttonHeight = 50;
+        // let popupButtonX = width / 2 - 75;
+        // let popupButtonY = popupY + 150;
+        // let popupButtonWidth = 150;
+        // let popupButtonHeight = 50;
 
         // Button shadow
         fill(30, 30, 30, 200);
-        rect(buttonX + 3, buttonY + 3, buttonWidth, buttonHeight, 5);
+        rect(popupButtonX + 3, popupButtonY + 3, popupButtonWidth, popupButtonHeight, 5);
 
         // Button background
         fill(100, 170, 80);
-        if (mouseX > buttonX && mouseX < buttonX + buttonWidth &&
-            mouseY > buttonY && mouseY < buttonY + buttonHeight) {
+        if (mouseX > popupButtonX && mouseX < popupButtonX + popupButtonWidth &&
+            mouseY > popupButtonY && mouseY < popupButtonY + popupButtonHeight) {
             fill(120, 200, 100); // Highlight on hover
             if (mouseIsPressed) {
                 fill(80, 140, 60); // Darker when pressed
             }
         }
-        rect(buttonX, buttonY, buttonWidth, buttonHeight, 5);
+        rect(popupButtonX, popupButtonY, popupButtonWidth, popupButtonHeight, 5);
 
         // Button text
         fill(255);
         textSize(18);
-        text("Next Level", width / 2, buttonY + 25);
+        text("Next Level", width / 2, popupButtonY + 25);
+        fill(255, 215, 0);
+        text("Income: " + coinsEarnedThisRound + " coins", width / 2, popupY + 100);
     } else {
         text("You Lose!!", width / 2, popupY + 75);
 
@@ -926,13 +1082,13 @@ function mousePressed() {
 function handleGamePlayMousePress() {
     // Check if clicking on the next level button in success popup
     if (showPopup && popupType === "success") {
-        let buttonX = width / 2 - 75;
-        let buttonY = height / 2 - 200 / 2 + 100;
-        let buttonWidth = 150;
-        let buttonHeight = 50;
+        // let popupButtonX = width / 2 - 75;
+        // let popupButtonY = height / 2 - 200 / 2 + 100;
+        // let popupButtonWidth = 150;
+        // let popupButtonHeight = 50;
 
-        if (mouseX > buttonX && mouseX < buttonX + buttonWidth &&
-            mouseY > buttonY && mouseY < buttonY + buttonHeight) {
+        if (mouseX > popupButtonX && mouseX < popupButtonX + popupButtonWidth &&
+            mouseY > popupButtonY && mouseY < popupButtonY + popupButtonHeight) {
             // Hide popup and load next level
             showPopup = false;
             const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
@@ -1039,26 +1195,38 @@ function setupShopSystem() {
     // This is already handled in the updated mousePressed function
 }
 
+// Update findBlockAt to handle headers in nested blocks
 function findBlockAt(mx, my, blockList) {
     for (let i = blockList.length - 1; i >= 0; i--) {
         let block = blockList[i];
-
         if (!block) continue;
 
         if (block instanceof CompoundBlock) {
+            // Check headers
             for (let key in block.header) {
                 let h = block.header[key];
-                if (h.contains(mx, my)) return h;
+                if (h && h.contains(mx, my)) return h;
             }
 
-            const children = block instanceof IfElseBlock
-                ? [...block.ifSection.children, ...block.elseSection.children]
-                : block.children;
+            // If this is an if-else block, check both sections
+            if (block instanceof IfElseBlock) {
+                // Check if section children
+                const ifResult = findBlockAt(mx, my, block.ifSection.children);
+                if (ifResult) return ifResult;
 
-            const childMatch = findBlockAt(mx, my, children);
-            if (childMatch) return childMatch;
+                // Check else section children
+                const elseResult = findBlockAt(mx, my, block.elseSection.children);
+                if (elseResult) return elseResult;
+            }
+            // Regular compound block
+            else if (block.children) {
+                // Check children
+                const childResult = findBlockAt(mx, my, block.children);
+                if (childResult) return childResult;
+            }
         }
 
+        // Check the block itself
         if (block.contains(mx, my)) return block;
     }
 
@@ -1215,6 +1383,44 @@ function removeBlock(target) {
 function recursiveRemove(target, parentBlock) {
     if (!(parentBlock instanceof CompoundBlock)) return false;
 
+    // Check for header blocks first
+    for (let [key, headerBlock] of Object.entries(parentBlock.header)) {
+        if (headerBlock === target) {
+            delete parentBlock.header[key];
+            return true;
+        }
+    }
+
+    // Handle different children containers based on block type
+    const childContainers = parentBlock instanceof IfElseBlock
+        ? [parentBlock.ifSection.children, parentBlock.elseSection.children]
+        : [parentBlock.children];
+
+    // Check each child container
+    for (let container of childContainers) {
+        const idx = container.indexOf(target);
+        if (idx !== -1) {
+            container.splice(idx, 1);
+            return true;
+        }
+
+        // Recursively check children that are compound blocks
+        for (let child of container) {
+            if (child instanceof CompoundBlock) {
+                if (recursiveRemove(target, child)) {
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+/*
+function recursiveRemove(target, parentBlock) {
+    if (!(parentBlock instanceof CompoundBlock)) return false;
+
     const children = parentBlock instanceof IfElseBlock
         ? [parentBlock.ifSection.children, parentBlock.elseSection.children]
         : [parentBlock.children];
@@ -1241,6 +1447,7 @@ function recursiveRemove(target, parentBlock) {
 
     return false;
 }
+*/
 
 function flattenBlocks(arr) {
     return arr.reduce((flat, b) => {
@@ -1252,14 +1459,7 @@ function flattenBlocks(arr) {
     }, []);
 }
 
-// function runCode() {
-//     let x = 1;
-//     for (let b of blocks) {
-//         if (b) x = b.evaluate(x);
-//     }
-//     console.log("Final x:", x);
-// }
-
+let coinsEarnedThisRound = 0;
 function runCode() {
     const problem = problemManager.getProblem(currentUser.currentProblem);
     const result = currentUser.submitSolution(blocks, problem);
@@ -1270,9 +1470,8 @@ function runCode() {
         // Handle problem completion
         console.log("Problem solved!");
         showPopup = true;
-        // Gain 10 gold, extra 1 per 5 interest
-        playerCoins += 10 + Math.floor(playerCoins / 5);
         popupType = "success";
+        coinsEarnedThisRound = 10 + Math.floor(playerCoins / 5);
         successSound.play()
 
         // Save progress
@@ -1297,34 +1496,43 @@ function runCode() {
     }
 }
 
-// Function to load the next problem
-function loadNextProblem(nextProblem) {
-    // Start the next problem
-    const gameState = currentUser.startProblem(nextProblem);
+function loadNextProblem(nextProblem, transition = true) {
+    function load() {
+        // Start the next problem
+        const gameState = currentUser.startProblem(nextProblem);
 
-    // Reset blocks array
-    blocks = [];
-    refreshShop();
-    let firstBlock = new CodeBlock("let x = " + gameState.problem.initialValue + ";", CODE_X, CODE_Y_START, true)
-    // firstBlock.w = (firstBlock.text.length + 5) * 7;
-    blocks.push(firstBlock);
-    // blocks.push(...gameState.blocks);
+        // Reset blocks array
+        blocks = [];
+        let firstBlock = new CodeBlock("let x = " + gameState.problem.initialValue + ";", CODE_X, CODE_Y_START, true)
+        blocks.push(firstBlock);
 
-    // Update available blocks
-    console.log(gameState.availableBlocks)
-    allBlocks = gameState.availableBlocks;
+        // Update available blocks
+        allBlocks = gameState.availableBlocks;
 
-    title = gameState.problem.title;
-    desc = gameState.problem.description;
-    target = gameState.problem.targetValue;
+        title = gameState.problem.title;
+        desc = gameState.problem.description;
+        target = gameState.problem.targetValue;
 
-    // Fill the rest with nulls
-    while (blocks.length < NUM_LINES) {
-        blocks.push(null);
+        // Fill the rest with nulls
+        while (blocks.length < NUM_LINES) {
+            blocks.push(null);
+        }
+
+        // Make sure blocks are properly arranged
+        shiftBlocksUp();
+        refreshShop();
+
+        // Gain 10 gold, extra 1 per 5 interest
+        playerCoins += 10 + Math.floor(playerCoins / 5);
     }
 
-    // Make sure blocks are properly arranged
-    shiftBlocksUp();
+    if (transition) {
+        startTransition("problem", function () {
+            load();
+        });
+    } else {
+        load();
+    }
 }
 
 // Function to load the shop between problems

@@ -5,7 +5,7 @@ function initializeItemPool() {
         {
             id: 'for_loop',
             name: 'For Loop',
-            description: 'A classic for loop block',
+            description: 'A classic for loop block.',
             price: 5,
             rarity: 'common',
             block: () => new ForLoopBlock(0, 0)
@@ -15,7 +15,7 @@ function initializeItemPool() {
             name: 'While Loop',
             description: 'Loop while a condition is true',
             price: 7,
-            rarity: 'uncommon',
+            rarity: 'common',
             block: () => new WhileBlock(0, 0)
         },
         {
@@ -23,7 +23,7 @@ function initializeItemPool() {
             name: 'If-Else Block',
             description: 'Branch based on conditions',
             price: 10,
-            rarity: 'uncommon',
+            rarity: 'common',
             block: () => new IfElseBlock(0, 0)
         },
         // Math operations
@@ -116,6 +116,14 @@ function initializeItemPool() {
             block: () => new CodeBlock("x /= 3;", 0, 0)
         },
         {
+            id: 'div_5',
+            name: 'Divide ÷3',
+            description: 'Divide value by 3',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x /= 3;", 0, 0)
+        },
+        {
             id: 'square',
             name: 'Square',
             description: 'Square the value',
@@ -155,22 +163,6 @@ function initializeItemPool() {
             price: 3,
             rarity: 'uncommon',
             block: () => new IncBlock(5, 0, 0)
-        },
-        {
-            id: 'dec_by_1',
-            name: 'Decrement -1',
-            description: 'Decrement by 1 in loops',
-            price: 2,
-            rarity: 'common',
-            block: () => new IncBlock(-1, 0, 0)
-        },
-        {
-            id: 'dec_by_2',
-            name: 'Decrement -2',
-            description: 'Decrement by 2 in loops',
-            price: 3,
-            rarity: 'uncommon',
-            block: () => new IncBlock(-2, 0, 0)
         },
         // Conditions
         {
@@ -268,7 +260,7 @@ function initializeItemPool() {
             name: 'Flip Sign',
             description: 'Change value to its opposite',
             price: 6,
-            rarity: 'rare',
+            rarity: 'uncommom',
             block: () => new CodeBlock("x = -x;", 0, 0)
         },
         {
@@ -303,5 +295,250 @@ function initializeItemPool() {
             rarity: 'uncommon',
             block: () => new BreakBlock(0, 0)
         },
+        // Additional math operations
+        {
+            id: 'abs_x',
+            name: 'Absolute Value',
+            description: 'Get the absolute value of x',
+            price: 7,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = Math.abs(x);", 0, 0)
+        },
+        {
+            id: 'sqrt_x',
+            name: 'Square Root',
+            description: 'Calculate the square root of x',
+            price: 9,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = Math.sqrt(x);", 0, 0)
+        },
+        {
+            id: 'floor_x',
+            name: 'Floor Value',
+            description: 'Round x down to the nearest integer',
+            price: 6,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = Math.floor(x);", 0, 0)
+        },
+        {
+            id: 'ceil_x',
+            name: 'Ceiling Value',
+            description: 'Round x up to the nearest integer',
+            price: 6,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = Math.ceil(x);", 0, 0)
+        },
+        {
+            id: 'round_x',
+            name: 'Round Value',
+            description: 'Round x to the nearest integer',
+            price: 6,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = Math.round(x);", 0, 0)
+        },
+        {
+            id: 'truncate_x',
+            name: 'Truncate Decimals',
+            description: 'Remove decimal part from x',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = parseInt(x);", 0, 0)
+        },
+        {
+            id: 'mod_3',
+            name: 'Modulo 3',
+            description: 'Remainder when divided by 3',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = x % 3;", 0, 0)
+        },
+        {
+            id: 'mod_5',
+            name: 'Modulo 5',
+            description: 'Remainder when divided by 5',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = x % 5;", 0, 0)
+        },
+        {
+            id: 'mod_10',
+            name: 'Modulo 10',
+            description: 'Remainder when divided by 10 (last digit)',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = x % 10;", 0, 0)
+        },
+        {
+            id: 'add_fraction',
+            name: 'Add 0.5',
+            description: 'Add 0.5 to the value',
+            price: 3,
+            rarity: 'common',
+            block: () => new CodeBlock("x += 0.5;", 0, 0)
+        },
+        {
+            id: 'mul_fraction',
+            name: 'Multiply by 0.5',
+            description: 'Multiply value by 0.5 (half)',
+            price: 4,
+            rarity: 'common',
+            block: () => new CodeBlock("x *= 0.5;", 0, 0)
+        },
+        {
+            id: 'to_power_2',
+            name: 'Power of 2',
+            description: 'Square the value (x²)',
+            price: 8,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = Math.pow(x, 2);", 0, 0)
+        },
+        {
+            id: 'to_power_3',
+            name: 'Power of 3',
+            description: 'Cube the value (x³)',
+            price: 10,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = Math.pow(x, 3);", 0, 0)
+        },
+        {
+            id: 'cube_root',
+            name: 'Cube Root',
+            description: 'Calculate the cube root of x',
+            price: 11,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = Math.cbrt(x);", 0, 0)
+        },
+        {
+            id: 'exp_x',
+            name: 'Exponential',
+            description: 'Calculate e raised to the power of x',
+            price: 12,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = Math.exp(x);", 0, 0)
+        },
+
+        // Additional conditionals
+        {
+            id: 'cond_equal_10',
+            name: 'x === 10',
+            description: 'True when x equals 10',
+            price: 4,
+            rarity: 'common',
+            block: () => new ConditionBlock("x === 10", 0, 0)
+        },
+        {
+            id: 'cond_mod3_0',
+            name: 'x % 3 === 0',
+            description: 'True when x is divisible by 3',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("x % 3 === 0", 0, 0)
+        },
+        {
+            id: 'cond_mod5_0',
+            name: 'x % 5 === 0',
+            description: 'True when x is divisible by 5',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("x % 5 === 0", 0, 0)
+        },
+        {
+            id: 'cond_x_positive',
+            name: 'x > 0',
+            description: 'True when x is positive',
+            price: 3,
+            rarity: 'common',
+            block: () => new ConditionBlock("x > 0", 0, 0)
+        },
+        {
+            id: 'cond_x_negative',
+            name: 'x < 0',
+            description: 'True when x is negative',
+            price: 3,
+            rarity: 'common',
+            block: () => new ConditionBlock("x < 0", 0, 0)
+        },
+        {
+            id: 'cond_x_decimal',
+            name: 'x !== Math.floor(x)',
+            description: 'True when x has a decimal part',
+            price: 6,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("x !== Math.floor(x)", 0, 0)
+        },
+        {
+            id: 'cond_x_int',
+            name: 'x === Math.floor(x)',
+            description: 'True when x is an integer',
+            price: 6,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("x === Math.floor(x)", 0, 0)
+        },
+        {
+            id: 'cond_between_10_20',
+            name: '10 < x && x < 20',
+            description: 'True when x is between 10 and 20',
+            price: 7,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("10 < x && x < 20", 0, 0)
+        },
+
+        // Specialized math operations
+        {
+            id: 'sign_x',
+            name: 'Sign of x',
+            description: 'Get the sign of x (-1, 0, or 1)',
+            price: 7,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = Math.sign(x);", 0, 0)
+        },
+        {
+            id: 'max_with_10',
+            name: 'Maximum with 10',
+            description: 'Get the maximum between x and 10',
+            price: 8,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = Math.max(x, 10);", 0, 0)
+        },
+        {
+            id: 'min_with_10',
+            name: 'Minimum with 10',
+            description: 'Get the minimum between x and 10',
+            price: 8,
+            rarity: 'uncommon',
+            block: () => new CodeBlock("x = Math.min(x, 10);", 0, 0)
+        },
+        {
+            id: 'sum_of_digits',
+            name: 'Sum of Digits',
+            description: 'Calculate sum of digits in x (works best for integers)',
+            price: 15,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = String(x).split('').reduce((sum, digit) => sum + Number(digit), 0);", 0, 0)
+        },
+        {
+            id: 'reverse_digits',
+            name: 'Reverse Digits',
+            description: 'Reverse the digits of x (works best for integers)',
+            price: 15,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = Number(String(Math.abs(Math.floor(x))).split('').reverse().join('')) * Math.sign(x);", 0, 0)
+        },
+        {
+            id: 'log10_x',
+            name: 'Log Base 10',
+            description: 'Calculate log base 10 of x',
+            price: 12,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = Math.log10(x);", 0, 0)
+        },
+        {
+            id: 'log2_x',
+            name: 'Log Base 2',
+            description: 'Calculate log base 2 of x',
+            price: 12,
+            rarity: 'rare',
+            block: () => new CodeBlock("x = Math.log2(x);", 0, 0)
+        }
     ];
 }

@@ -424,6 +424,14 @@ class ProblemManager {
       2   // target value
     );
     problem1.addAvailableBlock(new CodeBlock("x += 1;", SIDEBAR_X, CODE_Y_START));
+    // problem1.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START + 40));
+    // problem1.addAvailableBlock(new WhileBlock(SIDEBAR_X, CODE_Y_START + 40));
+    // problem1.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 40));
+    // problem1.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 80));
+    // problem1.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
+    // problem1.addAvailableBlock(new ConditionBlock('i < 10', SIDEBAR_X, CODE_Y_START + 160));
+    // problem1.addAvailableBlock(new ConditionBlock('i <= 5', SIDEBAR_X, CODE_Y_START + 180));
+    // problem1.addAvailableBlock(new ConditionBlock('x <= 5', SIDEBAR_X, CODE_Y_START + 200));
     manager.addProblem(problem1);
 
     // Problem 2: Doubling Up (Fully Solvable)
@@ -442,19 +450,15 @@ class ProblemManager {
       'p3',
       'Basic Loop',
       'Use a for loop to add 5 to the value.',
-      3,  // initial value
-      8   // target value
+      4,  // initial value
+      9   // target value
     );
     problem3.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START));
     problem3.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 40));
-    problem3.addAvailableBlock(new ConditionBlock("i < 5", SIDEBAR_X, CODE_Y_START + 80));
+    problem3.addAvailableBlock(new ConditionBlock("i < 2", SIDEBAR_X, CODE_Y_START + 80));
     problem3.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
-    problem3.addAvailableBlock(new CodeBlock("x += 5;", SIDEBAR_X, CODE_Y_START + 160));
-    problem3.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 40));
-    problem3.addAvailableBlock(new BreakBlock(SIDEBAR_X, CODE_Y_START + 80));
-    problem3.addAvailableBlock(new AddIBlock(SIDEBAR_X, CODE_Y_START + 120));
-    problem3.addAvailableBlock(new PrintBlock(SIDEBAR_X, CODE_Y_START + 160));
-    problem3.addAvailableBlock(new ConditionBlock("x > 10", SIDEBAR_X, CODE_Y_START + 200));
+    problem3.addAvailableBlock(new CodeBlock("x += 2;", SIDEBAR_X, CODE_Y_START + 160));
+    problem3.addAvailableBlock(new CodeBlock("x += 1;", SIDEBAR_X, CODE_Y_START + 200));
     manager.addProblem(problem3);
 
     // Problem 4: Conditional Logic (Fully Solvable)
@@ -513,7 +517,7 @@ class ProblemManager {
     problem7.addAvailableBlock(new InitBlock(1, SIDEBAR_X, CODE_Y_START + 40));
     problem7.addAvailableBlock(new ConditionBlock("i <= 6", SIDEBAR_X, CODE_Y_START + 80));
     problem7.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
-    problem7.addAvailableBlock(new CodeBlock("x += i;", SIDEBAR_X, CODE_Y_START + 160));
+    problem7.addAvailableBlock(new AddIBlock(SIDEBAR_X, CODE_Y_START + 160));
     manager.addProblem(problem7);
 
     // Problem 8: Odd Even Counter
@@ -568,8 +572,7 @@ class ProblemManager {
     problem10.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 200));
     problem10.addAvailableBlock(new ConditionBlock("x >= 10", SIDEBAR_X, CODE_Y_START + 240));
     // Special "break" block - this is a unique concept for this problem
-    problem10.addAvailableBlock(new CodeBlock("// Special break block - stops the loop", SIDEBAR_X, CODE_Y_START + 280));
-    problem10.addAvailableBlock(new CodeBlock("break;", SIDEBAR_X, CODE_Y_START + 320));
+    problem10.addAvailableBlock(new BreakBlock(SIDEBAR_X, CODE_Y_START + 320));
     manager.addProblem(problem10);
 
     // Problem 11: Collatz Steps
@@ -588,168 +591,168 @@ class ProblemManager {
     problem11.addAvailableBlock(new CodeBlock("x = 3 * x + 1;", SIDEBAR_X, CODE_Y_START + 200));
     manager.addProblem(problem11);
 
-    // Problem 12: Divisibility Test
+    // Problem 12: Pi Approximation
     const problem12 = new Problem(
       'p12',
-      'Divisibility Test',
-      'Check if a number is divisible by 2, 3, and 5. Return the sum of divisors.',
-      30,     // initial value
-      10      // target value (2+3+5)
+      'Pi Approximation',
+      'Transform the value to create a famous approximation of π. Visit the shop for division!',
+      0,    // initial value
+      3.14, // target value (approximately π)
     );
-    problem12.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START));
-    problem12.addAvailableBlock(new ConditionBlock("x % 2 === 0", SIDEBAR_X, CODE_Y_START + 40));
-    problem12.addAvailableBlock(new ConditionBlock("x % 3 === 0", SIDEBAR_X, CODE_Y_START + 80));
-    problem12.addAvailableBlock(new ConditionBlock("x % 5 === 0", SIDEBAR_X, CODE_Y_START + 120));
-    problem12.addAvailableBlock(new CodeBlock("x = 0;", SIDEBAR_X, CODE_Y_START + 160));
-    problem12.addAvailableBlock(new CodeBlock("x += 2;", SIDEBAR_X, CODE_Y_START + 200));
-    problem12.addAvailableBlock(new CodeBlock("x += 3;", SIDEBAR_X, CODE_Y_START + 240));
-    problem12.addAvailableBlock(new CodeBlock("x += 5;", SIDEBAR_X, CODE_Y_START + 280));
+    problem12.addAvailableBlock(new CodeBlock("x = 0;", SIDEBAR_X, CODE_Y_START)); // Reset in case they mess up
+    problem12.addAvailableBlock(new CodeBlock("x -= 42;", SIDEBAR_X, CODE_Y_START + 40)); // Distraction
+    problem12.addAvailableBlock(new CodeBlock("x *= 3;", SIDEBAR_X, CODE_Y_START + 80)); // Distraction
+    problem12.addAvailableBlock(new CodeBlock("x /= 100;", SIDEBAR_X, CODE_Y_START + 120)); // Distraction
+    problem12.addAvailableBlock(new CodeBlock("x += 100;", SIDEBAR_X, CODE_Y_START + 160)); // Distraction
     manager.addProblem(problem12);
 
-    // Problem 13: Parity Counter
+    // Problem 13: The Answer to Everything
     const problem13 = new Problem(
       'p13',
-      'Parity Counter',
-      'Count through the numbers 1-20. If the result so far is even, add 2. If odd, add 1.',
-      0,      // initial value
-      31      // target value
+      'The Answer to Everything',
+      'According to "The Hitchhiker\'s Guide to the Galaxy", what is the answer to life, the universe, and everything?',
+      0,    // initial value
+      42      // target value
     );
-    problem13.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START));
-    problem13.addAvailableBlock(new InitBlock(1, SIDEBAR_X, CODE_Y_START + 40));
-    problem13.addAvailableBlock(new ConditionBlock("i <= 20", SIDEBAR_X, CODE_Y_START + 80));
-    problem13.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
-    problem13.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 160));
-    problem13.addAvailableBlock(new ConditionBlock("x % 2 === 0", SIDEBAR_X, CODE_Y_START + 200));
-    problem13.addAvailableBlock(new CodeBlock("x += 2;", SIDEBAR_X, CODE_Y_START + 240));
-    problem13.addAvailableBlock(new CodeBlock("x += 1;", SIDEBAR_X, CODE_Y_START + 280));
+    problem13.addAvailableBlock(new CodeBlock("x += 80;", SIDEBAR_X, CODE_Y_START));
+    problem13.addAvailableBlock(new CodeBlock("x *= 2;", SIDEBAR_X, CODE_Y_START + 40));
+    problem13.addAvailableBlock(new CodeBlock("x /= 4;", SIDEBAR_X, CODE_Y_START + 80));
+    // Missing: x = Math.abs(x) - must be purchased from shop
     manager.addProblem(problem13);
 
-    // Problem 14: Digit Summer
+    // Problem 14: Devil's Number
     const problem14 = new Problem(
       'p14',
-      'Digit Summer',
-      'Sum the digits of the input number. For example, 123 gives 1+2+3=6',
-      123,    // initial value
-      6       // target value
+      'Devil\'s Number',
+      'Turn the lucky number 777 into the devil\'s number 666.',
+      777,    // initial value
+      666     // target value
     );
-    problem14.addAvailableBlock(new CodeBlock("x = Math.floor(x / 100) + Math.floor((x % 100) / 10) + (x % 10);", SIDEBAR_X, CODE_Y_START));
-    problem14.addAvailableBlock(new WhileBlock(SIDEBAR_X, CODE_Y_START + 40));
-    problem14.addAvailableBlock(new ConditionBlock("x > 0", SIDEBAR_X, CODE_Y_START + 80));
-    // Shop needed blocks
-    // These alone won't solve it
-    problem14.addAvailableBlock(new CodeBlock("x = Math.floor(x / 10);", SIDEBAR_X, CODE_Y_START + 120));
-    problem14.addAvailableBlock(new CodeBlock("x = x % 10;", SIDEBAR_X, CODE_Y_START + 160));
+    problem14.addAvailableBlock(new CodeBlock("x -= 100;", SIDEBAR_X, CODE_Y_START));
+    problem14.addAvailableBlock(new CodeBlock("x -= 10;", SIDEBAR_X, CODE_Y_START + 40));
+    problem14.addAvailableBlock(new CodeBlock("x -= 5;", SIDEBAR_X, CODE_Y_START + 80));
+    // Intentionally missing x -= 1 or similar to make the precise adjustment
     manager.addProblem(problem14);
 
-    // Problem 15: Modular Clock
+    // Problem 15: Binary Millennium
     const problem15 = new Problem(
       'p15',
-      'Modular Clock',
-      'Add 6 hours to the current hour, but wrap around at 12 (use modular arithmetic).',
-      8,     // initial value (8 o'clock)
-      2      // target value (2 o'clock)
+      'Binary Millennium',
+      'Create the binary millennium (2^10 = 1024), often mistaken for exactly 1000 in computing.',
+      1,      // initial value
+      1024    // target value
     );
-    problem15.addAvailableBlock(new CodeBlock("x = (x + 6) % 12;", SIDEBAR_X, CODE_Y_START));
-    problem15.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 40));
-    problem15.addAvailableBlock(new ConditionBlock("x === 0", SIDEBAR_X, CODE_Y_START + 80));
-    problem15.addAvailableBlock(new CodeBlock("x = 12;", SIDEBAR_X, CODE_Y_START + 120));
+    problem15.addAvailableBlock(new CodeBlock("x *= 2;", SIDEBAR_X, CODE_Y_START)); // Can double repeatedly
+    problem15.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START + 40));
+    problem15.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 80));
+    problem15.addAvailableBlock(new ConditionBlock("i < 5", SIDEBAR_X, CODE_Y_START + 120)); // Not enough iterations
+    problem15.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 160));
+    // Missing: Math.pow(2, 10) or a loop that goes to 10 iterations
     manager.addProblem(problem15);
 
-    // Problem 16: Nested Counters
+    // Problem 16: Golden Ratio
     const problem16 = new Problem(
       'p16',
-      'Nested Counters',
-      'Use nested loops to count from grid positions (0,0) to (2,2). Add the coordinates.',
-      0,     // initial value
-      9      // target value (0+0 + 0+1 + 0+2 + 1+0 + 1+1 + 1+2 + 2+0 + 2+1 + 2+2)
+      'Golden Ratio',
+      'Calculate the golden ratio (φ ≈ 1.618), one of mathematics\' most beautiful numbers.',
+      1,      // initial value
+      1.618   // target value
     );
-    problem16.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START));
-    problem16.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 40));
-    problem16.addAvailableBlock(new ConditionBlock("i <= 2", SIDEBAR_X, CODE_Y_START + 80));
-    problem16.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
-    problem16.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START + 160));
-    problem16.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 200));
-    problem16.addAvailableBlock(new ConditionBlock("j <= 2", SIDEBAR_X, CODE_Y_START + 240));
-    problem16.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 280));
-    problem16.addAvailableBlock(new CodeBlock("x += i + j;", SIDEBAR_X, CODE_Y_START + 320));
+    problem16.addAvailableBlock(new CodeBlock("x += 0.5;", SIDEBAR_X, CODE_Y_START));
+    problem16.addAvailableBlock(new CodeBlock("x += 0.1;", SIDEBAR_X, CODE_Y_START + 40));
+    problem16.addAvailableBlock(new CodeBlock("x += 0.018;", SIDEBAR_X, CODE_Y_START + 80));
+    problem16.addAvailableBlock(new CodeBlock("x = Math.sqrt(x);", SIDEBAR_X, CODE_Y_START + 80));
+    // Missing: x = (1 + Math.sqrt(5)) / 2 - needs square root from shop
     manager.addProblem(problem16);
 
-    // Problem 17: Square Challenge
+    // Problem 17: Perfect Temperature
     const problem17 = new Problem(
       'p17',
-      'Square Challenge',
-      'Calculate the square of the input number without using multiplication.',
-      4,     // initial value
-      16     // target value
+      'Perfect Temperature',
+      'Convert a hot summer day of 86°F to a comfortable Celsius temperature.',
+      86,     // initial value (°F)
+      30      // target value (°C)
     );
-    problem17.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START));
-    problem17.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 40));
-    problem17.addAvailableBlock(new ConditionBlock("i < x", SIDEBAR_X, CODE_Y_START + 80));
-    problem17.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
-    problem17.addAvailableBlock(new CodeBlock("x += 4;", SIDEBAR_X, CODE_Y_START + 160));
-    // Needs work - the above won't solve it correctly - shop needed
+    problem17.addAvailableBlock(new CodeBlock("x -= 32;", SIDEBAR_X, CODE_Y_START));
+    problem17.addAvailableBlock(new CodeBlock("x += 32;", SIDEBAR_X, CODE_Y_START + 40));
+    problem17.addAvailableBlock(new CodeBlock("x *= 9;", SIDEBAR_X, CODE_Y_START + 80));
+    problem17.addAvailableBlock(new CodeBlock("x /= 9;", SIDEBAR_X, CODE_Y_START + 120));
+    // Missing: x *= 5/9 or similar - needs multiplication by fraction from shop
     manager.addProblem(problem17);
 
-    // Problem 18: Alternating Series
+    // Problem 18: Perfect Square
     const problem18 = new Problem(
       'p18',
-      'Alternating Series',
-      'Create an alternating series: 1 - 2 + 3 - 4 + 5 = 3',
-      0,     // initial value
-      3      // target value
+      'Perfect Square',
+      'Find the number that, when squared, equals 256. A perfect square problem!',
+      256,    // initial value
+      16      // target value (√256 = 16)
     );
-    problem18.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START));
-    problem18.addAvailableBlock(new InitBlock(1, SIDEBAR_X, CODE_Y_START + 40));
-    problem18.addAvailableBlock(new ConditionBlock("i <= 5", SIDEBAR_X, CODE_Y_START + 80));
-    problem18.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
-    problem18.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 160));
-    problem18.addAvailableBlock(new ConditionBlock("i % 2 === 1", SIDEBAR_X, CODE_Y_START + 200));
-    problem18.addAvailableBlock(new CodeBlock("x += i;", SIDEBAR_X, CODE_Y_START + 240));
-    problem18.addAvailableBlock(new CodeBlock("x -= i;", SIDEBAR_X, CODE_Y_START + 280));
+    problem18.addAvailableBlock(new CodeBlock("x /= 16;", SIDEBAR_X, CODE_Y_START));
+    problem18.addAvailableBlock(new CodeBlock("x /= 4;", SIDEBAR_X, CODE_Y_START + 40));
+    problem18.addAvailableBlock(new CodeBlock("x *= 4;", SIDEBAR_X, CODE_Y_START + 80));
+    // Missing: x = Math.sqrt(x) - needs square root from shop
     manager.addProblem(problem18);
 
-    // Problem 19: Sequence Finder
+    // Problem 19: Lunar Calendar
     const problem19 = new Problem(
       'p19',
-      'Sequence Finder',
-      'Implement the sequence: a₁=1, a₂=2, a₃=4, a₄=8, a₅=16...',
-      0,     // initial value
-      31     // target value (1+2+4+8+16)
+      'Lunar Calendar',
+      'Calculate how many days are in 13 lunar months (29.5 days each). Round to a whole number.',
+      13,     // initial value (months)
+      384     // target value (29.5 * 13 = 383.5, rounded to 384)
     );
-    problem19.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START));
-    problem19.addAvailableBlock(new InitBlock(0, SIDEBAR_X, CODE_Y_START + 40));
-    problem19.addAvailableBlock(new ConditionBlock("i < 5", SIDEBAR_X, CODE_Y_START + 80));
-    problem19.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 120));
-    problem19.addAvailableBlock(new CodeBlock("x += Math.pow(2, i);", SIDEBAR_X, CODE_Y_START + 160));
-    // Tougher approach without Math.pow - player will need to buy shop items
-    problem19.addAvailableBlock(new CodeBlock("x += 1;", SIDEBAR_X, CODE_Y_START + 200));
-    problem19.addAvailableBlock(new CodeBlock("x += 2;", SIDEBAR_X, CODE_Y_START + 240));
-    problem19.addAvailableBlock(new CodeBlock("x += 4;", SIDEBAR_X, CODE_Y_START + 280));
-    problem19.addAvailableBlock(new CodeBlock("x += 8;", SIDEBAR_X, CODE_Y_START + 320));
-    problem19.addAvailableBlock(new CodeBlock("x += 16;", SIDEBAR_X, CODE_Y_START + 360));
+    problem19.addAvailableBlock(new CodeBlock("x *= 29;", SIDEBAR_X, CODE_Y_START));
+    problem19.addAvailableBlock(new CodeBlock("x += 4;", SIDEBAR_X, CODE_Y_START + 40));
+    problem19.addAvailableBlock(new CodeBlock("x += 0.5;", SIDEBAR_X, CODE_Y_START + 80));
+    // Missing: Math.round(x) or similar rounding operation from shop
     manager.addProblem(problem19);
 
-    // Problem 20: Prime Checker
+    // Problem 20: Tax Calculator
     const problem20 = new Problem(
       'p20',
-      'Prime Checker',
-      'Check if the input is prime. Return 1 if prime, 0 if not.',
-      17,    // initial value (a prime number)
-      1      // target value (true, it's prime)
+      'Tax Calculator',
+      'Calculate 8.25% sales tax on a $120 purchase and add it to the total.',
+      120,    // initial value (purchase amount)
+      129.90  // target value (120 + 9.90 tax)
     );
-    problem20.addAvailableBlock(new CodeBlock("x = 1;", SIDEBAR_X, CODE_Y_START)); // Assume prime
-    problem20.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 40));
-    problem20.addAvailableBlock(new ConditionBlock("x <= 1", SIDEBAR_X, CODE_Y_START + 80));
-    problem20.addAvailableBlock(new CodeBlock("x = 0;", SIDEBAR_X, CODE_Y_START + 120)); // Not prime
-    problem20.addAvailableBlock(new ForLoopBlock(SIDEBAR_X, CODE_Y_START + 160));
-    problem20.addAvailableBlock(new InitBlock(2, SIDEBAR_X, CODE_Y_START + 200));
-    problem20.addAvailableBlock(new ConditionBlock("i < x", SIDEBAR_X, CODE_Y_START + 240));
-    problem20.addAvailableBlock(new IncBlock(1, SIDEBAR_X, CODE_Y_START + 280));
-    problem20.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 320));
-    problem20.addAvailableBlock(new ConditionBlock("x % i === 0", SIDEBAR_X, CODE_Y_START + 360));
-    problem20.addAvailableBlock(new CodeBlock("x = 0;", SIDEBAR_X, CODE_Y_START + 400)); // Not prime
-    problem20.addAvailableBlock(new CodeBlock("break;", SIDEBAR_X, CODE_Y_START + 440)); // Break the loop
+    problem20.addAvailableBlock(new CodeBlock("x += 9;", SIDEBAR_X, CODE_Y_START));
+    problem20.addAvailableBlock(new CodeBlock("x += 0.9;", SIDEBAR_X, CODE_Y_START + 40));
+    problem20.addAvailableBlock(new WhileBlock(SIDEBAR_X, CODE_Y_START + 80));
+    problem20.addAvailableBlock(new ConditionBlock("x < 129.9", SIDEBAR_X, CODE_Y_START + 120));
+    problem20.addAvailableBlock(new CodeBlock("x += 0.1;", SIDEBAR_X, CODE_Y_START + 160));
+    // Missing: x *= 1.0825 or x += x * 0.0825 - requires shop purchase
     manager.addProblem(problem20);
+
+    // Problem 21: Palindrome Detector
+    const problem21 = new Problem(
+      'p21',
+      'Palindrome Detector',
+      'Determine if 12321 is a palindrome (reads the same forwards and backwards). 1 for yes, 0 for no.',
+      12321,  // initial value
+      1       // target value (yes, it's a palindrome)
+    );
+    problem21.addAvailableBlock(new CodeBlock("x = 0;", SIDEBAR_X, CODE_Y_START)); // Set to "no"
+    problem21.addAvailableBlock(new CodeBlock("x = 1;", SIDEBAR_X, CODE_Y_START + 40)); // Set to "yes"
+    problem21.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 80));
+    problem21.addAvailableBlock(new ConditionBlock("x === 12321", SIDEBAR_X, CODE_Y_START + 120));
+    // Missing: String reverse and compare operation needed from shop
+    manager.addProblem(problem21);
+
+    // Problem 22: Unlucky Floor
+    const problem22 = new Problem(
+      'p22',
+      'Unlucky Floor',
+      'Many buildings skip the 13th floor due to superstition. Convert actual floor 14 to displayed floor 13.',
+      14,     // initial value (actual floor)
+      13      // target value (displayed floor)
+    );
+    problem22.addAvailableBlock(new CodeBlock("x = 13;", SIDEBAR_X, CODE_Y_START)); // Direct solution (too easy)
+    problem22.addAvailableBlock(new IfElseBlock(SIDEBAR_X, CODE_Y_START + 40));
+    problem22.addAvailableBlock(new ConditionBlock("x > 13", SIDEBAR_X, CODE_Y_START + 80));
+    problem22.addAvailableBlock(new CodeBlock("x += 1;", SIDEBAR_X, CODE_Y_START + 120)); // Wrong direction
+    // Missing: x -= 1 block (must be purchased from shop)
+    manager.addProblem(problem22);
 
     return manager;
   }
