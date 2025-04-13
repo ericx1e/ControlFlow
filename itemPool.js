@@ -36,12 +36,116 @@ function initializeItemPool() {
             block: () => new WhileBlock(0, 0)
         },
         {
+            id: 'for_loop',
+            name: 'For Loop',
+            description: 'A classic for loop block.',
+            price: 5,
+            rarity: 'common',
+            block: () => new ForLoopBlock(0, 0)
+        },
+        {
+            id: 'while_loop',
+            name: 'While Loop',
+            description: 'Loop while a condition is true',
+            price: 7,
+            rarity: 'common',
+            block: () => new WhileBlock(0, 0)
+        },
+        {
+            id: 'for_loop',
+            name: 'For Loop',
+            description: 'A classic for loop block.',
+            price: 5,
+            rarity: 'common',
+            block: () => new ForLoopBlock(0, 0)
+        },
+        {
+            id: 'while_loop',
+            name: 'While Loop',
+            description: 'Loop while a condition is true',
+            price: 7,
+            rarity: 'common',
+            block: () => new WhileBlock(0, 0)
+        },
+        {
+            id: 'for_loop',
+            name: 'For Loop',
+            description: 'A classic for loop block.',
+            price: 5,
+            rarity: 'common',
+            block: () => new ForLoopBlock(0, 0)
+        },
+        {
+            id: 'while_loop',
+            name: 'While Loop',
+            description: 'Loop while a condition is true',
+            price: 7,
+            rarity: 'common',
+            block: () => new WhileBlock(0, 0)
+        },
+        {
             id: 'if_else',
             name: 'If-Else Block',
             description: 'Branch based on conditions',
             price: 10,
             rarity: 'common',
             block: () => new IfElseBlock(0, 0)
+        },
+        {
+            id: 'cond_i_less_5',
+            name: 'i < 5',
+            description: 'True when loop variable i is less than 5',
+            price: 3,
+            rarity: 'common',
+            block: () => new ConditionBlock("i < 5", 0, 0)
+        },
+        {
+            id: 'cond_i_less_10',
+            name: 'i < 10',
+            description: 'True when loop variable i is less than 10',
+            price: 3,
+            rarity: 'common',
+            block: () => new ConditionBlock("i < 10", 0, 0)
+        },
+        {
+            id: 'cond_i_equal_5',
+            name: 'i === 5',
+            description: 'True when loop variable i equals 5',
+            price: 4,
+            rarity: 'common',
+            block: () => new ConditionBlock("i === 5", 0, 0)
+        },
+        {
+            id: 'cond_i_even',
+            name: 'i % 2 === 0',
+            description: 'True when loop variable i is even',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("i % 2 === 0", 0, 0)
+        },
+        {
+            id: 'cond_i_odd',
+            name: 'i % 2 === 1',
+            description: 'True when loop variable i is odd',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("i % 2 === 1", 0, 0)
+        },
+        {
+            id: 'cond_i_div3',
+            name: 'i % 3 === 0',
+            description: 'True when loop variable i is divisible by 3',
+            price: 5,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("i % 3 === 0", 0, 0)
+        },
+        {
+            id: 'cond_i_x_equal',
+            name: 'i === x',
+            description: 'True when loop variable i equals x',
+            price: 6,
+            rarity: 'uncommon',
+            block: () => new ConditionBlock("i === x", 0, 0)
         },
         // Math operations
         {
@@ -182,6 +286,14 @@ function initializeItemPool() {
             block: () => new IncBlock(5, 0, 0)
         },
         // Conditions
+        {
+            id: 'cond_less_5',
+            name: 'x < 5',
+            description: 'True when x less than 5',
+            price: 3,
+            rarity: 'common',
+            block: () => new ConditionBlock("x < 5", 0, 0)
+        },
         {
             id: 'cond_less_10',
             name: 'x < 10',
