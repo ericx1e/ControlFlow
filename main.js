@@ -15,6 +15,10 @@ const BUTTON_HEIGHT = 30;
 const BUTTON_Y_START = 500;
 const BUTTON_SPACING_Y = 40;
 const SHOP_Y_START = 700
+const GAME_STATE = {
+    START_SCREEN: 0,
+    GAMEPLAY: 1
+  };
 
 let blocks = []; // Array of length NUM_LINES to hold blocks, Null if empty
 let allBlocks = [];
@@ -33,6 +37,37 @@ let allPossibleItems = []; // Will hold all possible shop items
 let shopSize = 3; // Number of items shown in the shop at once
 let shopItems = [];
 let playerCoins = 10000000;
+let problemNumber = 1
+let currentState = "START_SCREEN";
+
+// Animation variables
+let titleSize = 60;
+let titlePulse = 0;
+let bgParticles = [];
+const NUM_PARTICLES = 50;
+
+// Button properties
+let startButton = { x: 400, y: 400, width: 200, height: 60 };
+
+// Initialize particles for background animation
+function setupStartScreen() {
+    // Create background particles
+    for (let i = 0; i < NUM_PARTICLES; i++) {
+      bgParticles.push({
+        x: random(width),
+        y: random(height),
+        size: random(3, 8),
+        speedX: random(-0.5, 0.5),
+        speedY: random(-0.5, 0.5),
+        color: color(
+          random(50, 100),
+          random(100, 170),
+          random(150, 255),
+          random(100, 200)
+        )
+      });
+    }
+  }
 
 function initializeItemPool() {
     // Basic operations
@@ -399,6 +434,8 @@ function setup() {
     canvas.position(0, 0);
     textSize(16);
     textFont('monospace');
+
+    setupStartScreen()
     // Initialize problem manager with default problems
     problemManager = ProblemManager.setProblems();
 
@@ -412,21 +449,333 @@ function setup() {
     loadNextProblem(firstProblem);
 }
 
+// Modified draw function to use the game state
 function draw() {
-    background(30);
-    drawCodeLines();
-    drawSidebar();
-    drawBlocks();
-    drawTarget();
-    drawShop();
-
-    if (draggingBlock) {
-        draggingBlock.x = mouseX + draggingBlock.offsetX;
-        draggingBlock.y = mouseY + draggingBlock.offsetY;
-        draggingBlock.draw(true);
+    switch (currentState) {
+      case "START_SCREEN":
+        drawStartScreen();
+        break;
+      case "GAMEPLAY":
+        // Call your existing game drawing code
+        background(30);
+        drawCodeLines();
+        drawSidebar();
+        drawBlocks();
+        // drawButtons();
+        drawTarget();
+        drawShop(); // Shop is always rendered based on its own visibility flag
+        
+        if (draggingBlock) {
+          draggingBlock.x = mouseX + draggingBlock.offsetX;
+          draggingBlock.y = mouseY + draggingBlock.offsetY;
+          draggingBlock.draw(true);
+        }
+        
+        drawPopup();
+        break;
     }
+}
 
-    drawPopup()
+// Draw the start screen
+function drawStartScreen() {
+  // Gradient background
+  background(20, 25, 40);
+  
+  // Draw animated particles
+  updateAndDrawParticles();
+  
+  // Draw title with pulsing effect
+  titlePulse += 0.05;
+  let pulseSize = titleSize + sin(titlePulse) * 5;
+  
+  textAlign(CENTER, CENTER);
+  textSize(pulseSize);
+  
+  // Shadow for text
+  fill(0, 0, 80, 100);
+  text("CONTROL FLOW", width/2 + 5, 150 + 5);
+  
+  // Main title with gradient
+  drawGradientText("CONTROL FLOW", width/2, 150);
+  
+  // Subtitle
+  textSize(20);
+  fill(180, 210, 255);
+  text("Master the Art of Programming", width/2, 220);
+  
+  // Draw decorative code brackets
+  drawCodeBrackets();
+  
+  // Start button
+  drawButton(startButton, "START", isMouseOver(startButton));
+  
+  // Version info
+  textSize(12);
+  textAlign(RIGHT, BOTTOM);
+  fill(150);
+  text("v1.0.0", width - 20, height - 20);
+  
+  // Reset text alignment
+  textAlign(LEFT, BASELINE);
+}
+
+// Update and draw background particles
+function updateAndDrawParticles() {
+  for (let particle of bgParticles) {
+    // Update position
+    particle.x += particle.speedX;
+    particle.y += particle.speedY;
+    
+    // Wrap around screen edges
+    if (particle.x < 0) particle.x = width;
+    if (particle.x > width) particle.x = 0;
+    if (particle.y < 0) particle.y = height;
+    if (particle.y > height) particle.y = 0;
+    
+    // Draw particle
+    noStroke();
+    fill(particle.color);
+    ellipse(particle.x, particle.y, particle.size);
+  }
+}
+
+// Draw title with gradient effect
+function drawGradientText(txt, x, y) {
+    let colors = [
+      color(60, 120, 255),  // Blue
+      color(100, 180, 255), // Light Blue
+      color(140, 200, 255)  // Cyan
+    ];
+    
+    // Create gradient effect manually
+    push();
+    textAlign(CENTER, CENTER);
+    
+    for (let i = 0; i < colors.length; i++) {
+      let amt = i / (colors.length - 1);
+      let yOffset = -10 + 20 * amt;
+      
+      fill(colors[i]);
+      text(txt, x, y + yOffset); // Using txt parameter instead of text
+    }
+    
+    // Add glow effect
+    drawingContext.shadowBlur = 15;
+    drawingContext.shadowColor = color(100, 180, 255, 150);
+    fill(200, 230, 255);
+    text(txt, x, y); // Using txt parameter instead of text
+    drawingContext.shadowBlur = 0;
+    
+    pop();
+  }
+
+// Draw decorative code brackets
+function drawCodeBrackets() {
+  textSize(80);
+  fill(80, 100, 150, 100);
+  text("{", 150, height/2);
+  text("}", width - 150, height/2);
+  
+  // Draw control flow symbols
+  textSize(24);
+  fill(60, 100, 150);
+  text("if()", 200, 300);
+  text("while()", width - 250, 300);
+  text("for()", 180, 400);
+  text("switch()", width - 230, 400);
+}
+
+// Helper function to draw a button
+function drawButton(btn, label, isHovered) {
+  // Button shadow
+  fill(20, 20, 40, 150);
+  rect(btn.x + 5, btn.y + 5, btn.width, btn.height, 8);
+  
+  // Button background
+  if (isHovered) {
+    // Gradient when hovered
+    const gradient = drawingContext.createLinearGradient(
+      btn.x, btn.y, 
+      btn.x + btn.width, btn.y + btn.height
+    );
+    gradient.addColorStop(0, color(80, 120, 200));
+    gradient.addColorStop(1, color(60, 80, 180));
+    drawingContext.fillStyle = gradient;
+  } else {
+    fill(60, 80, 160);
+  }
+  
+  rect(btn.x, btn.y, btn.width, btn.height, 8);
+  
+  // Button border
+  if (isHovered) {
+    strokeWeight(2);
+    stroke(150, 200, 255);
+  } else {
+    strokeWeight(1);
+    stroke(100, 150, 200);
+  }
+  rect(btn.x, btn.y, btn.width, btn.height, 8);
+  
+  // Button text
+  noStroke();
+  if (isHovered) {
+    fill(255);
+  } else {
+    fill(220);
+  }
+  textAlign(CENTER, CENTER);
+  textSize(24);
+  text(label, btn.x + btn.width/2, btn.y + btn.height/2);
+}
+
+// Check if mouse is over a button
+function isMouseOver(btn) {
+  return mouseX > btn.x && 
+         mouseX < btn.x + btn.width && 
+         mouseY > btn.y && 
+         mouseY < btn.y + btn.height;
+}
+
+// Modified mousePressed function
+function mousePressed() {
+    console.log(currentState)
+  switch (currentState) {
+    case "START_SCREEN":
+      // Check if start button is clicked
+        console.log("YE!!!S")
+      if (isMouseOver(startButton)) {
+        currentState = "GAMEPLAY";
+        console.log("YES")
+        return;
+      }
+      break;
+      
+    case "GAMEPLAY":
+      // Your existing gameplay mousePressed logic
+      handleGamePlayMousePress();
+      break;
+  }
+}
+
+// This would replace your current mousePressed function
+function handleGamePlayMousePress() {
+  // Check if clicking on the next level button in success popup
+  if (showPopup && popupType === "success") {
+    let buttonX = width / 2 - 75;
+    let buttonY = height / 2 - 200 / 2 + 100;
+    let buttonWidth = 150;
+    let buttonHeight = 50;
+    
+    if (mouseX > buttonX && mouseX < buttonX + buttonWidth && 
+        mouseY > buttonY && mouseY < buttonY + buttonHeight) {
+      // Hide popup and load next level
+      showPopup = false;
+      const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
+      if (nextProblem) {
+        loadNextProblem(nextProblem);
+      } else {
+        console.log("Congratulations! You've completed all problems!");
+      }
+      return;
+    }
+  }
+
+  // Only allow other interactions if popup is not showing
+  if (showPopup) return;
+  
+  // Handle shop interactions
+  if (mouseY > SHOP_Y_START) {
+    // Shop close button
+    const closeButtonX = 650;
+    const closeButtonY = SHOP_Y_START + 10;
+    const closeButtonSize = 30;
+    
+    if (mouseX > closeButtonX && mouseX < closeButtonX + closeButtonSize &&
+        mouseY > closeButtonY && mouseY < closeButtonY + closeButtonSize) {
+      showShop = false;
+      return;
+    }
+    
+    // Handle shop purchases
+    const itemsPerRow = 3;
+    const itemWidth = 210;
+    const itemHeight = 130;
+    const padding = 15;
+    
+    for (let i = 0; i < shopItems.length; i++) {
+      const item = shopItems[i];
+      if (item.purchased) continue;
+      
+      const row = Math.floor(i / itemsPerRow);
+      const col = i % itemsPerRow;
+      
+      const x = padding + col * (itemWidth + padding);
+      const y = SHOP_Y_START + 60 + row * (itemHeight + padding);
+      
+      const buttonWidth = 60;
+      const buttonHeight = 30;
+      const buttonX = x + itemWidth - buttonWidth - 10;
+      const buttonY = y + itemHeight - buttonHeight - 10;
+      
+      if (mouseX > buttonX && mouseX < buttonX + buttonWidth &&
+          mouseY > buttonY && mouseY < buttonY + buttonHeight && 
+          playerCoins >= item.price) {
+        
+        // Purchase the item
+        playerCoins -= item.price;
+        item.purchased = true;
+        
+        // Add the block to available blocks
+        const newBlock = item.block();
+        sidebarBlocks.push(newBlock);
+        allBlocks.push(newBlock);
+        
+        // Save the purchase to user data
+        currentUser.purchasedItems = currentUser.purchasedItems || [];
+        currentUser.purchasedItems.push(item.id);
+        currentUser.coins = playerCoins;
+        currentUser.save();
+        
+        return;
+      }
+    }
+  }
+
+  // Run button
+  if (mouseX > SIDEBAR_X && mouseX < SIDEBAR_X + BUTTON_WIDTH &&
+      mouseY > BUTTON_Y_START && mouseY < BUTTON_Y_START + BUTTON_HEIGHT) {
+    runCode();
+    return;
+  }
+  
+  // Shop button
+  if (mouseX > SIDEBAR_X && mouseX < SIDEBAR_X + BUTTON_WIDTH &&
+      mouseY > BUTTON_Y_START + BUTTON_SPACING_Y && 
+      mouseY < BUTTON_Y_START + BUTTON_SPACING_Y + BUTTON_HEIGHT) {
+    showShop = !showShop;
+    return;
+  }
+
+  // Block dragging
+  const targetBlock = findBlockAt(mouseX, mouseY, blocks.concat(allBlocks));
+
+  if (targetBlock && !targetBlock.isLocked) {
+    draggingBlock = targetBlock;
+    draggingBlock.offsetX = targetBlock.x - mouseX;
+    draggingBlock.offsetY = targetBlock.y - mouseY;
+    promoteBlock(draggingBlock);
+    removeBlock(draggingBlock);
+  }
+}
+
+// Add a key press handler to return to start screen (for debugging/testing)
+function keyPressed() {
+  if (key === 'Escape' || key === 'Esc') {
+    if (currentState === GAME_STATE.GAMEPLAY) {
+      currentState = GAME_STATE.START_SCREEN;
+    }
+  }
 }
 
 function drawCodeLines() {
@@ -816,7 +1165,7 @@ function drawTarget() {
     // Draw problem title
     fill(255);
     textSize(20);
-    text(title, CODE_X, TITLE_Y_START - 15);
+    text("Level " + problemNumber + ": " + title, CODE_X, TITLE_Y_START - 15);
 
 
     // Draw target value info
@@ -935,109 +1284,6 @@ function drawPopup() {
     // Reset text alignment for other text
     textAlign(LEFT, BASELINE);
     textSize(16);
-}
-
-function mousePressed() {
-    // Check if clicking on the next level button in success popup
-    if (showPopup && popupType === "success") {
-        let buttonX = width / 2 - 75;
-        let buttonY = height / 2 - 200 / 2 + 100;
-        let buttonWidth = 150;
-        let buttonHeight = 50;
-
-        if (mouseX > buttonX && mouseX < buttonX + buttonWidth &&
-            mouseY > buttonY && mouseY < buttonY + buttonHeight) {
-            // Hide popup and load next level
-            showPopup = false;
-            const nextProblem = problemManager.getNextProblem(currentUser.currentProblem);
-            if (nextProblem) {
-                loadNextProblem(nextProblem);
-            } else {
-                console.log("Congratulations! You've completed all problems!");
-                // Could show a game completion popup here
-            }
-            return; // Return early to prevent other interactions while popup is active
-        }
-    }
-
-    // Only allow other interactions if popup is not showing
-    if (showPopup) return;
-
-    // Handle shop refresh button
-    if (mouseX > refreshButtonX && mouseX < refreshButtonX + refreshButtonWidth &&
-        mouseY > refreshButtonY && mouseY < refreshButtonY + refreshButtonHeight &&
-        playerCoins >= shopRefreshCost) {
-        // Subtract the refresh cost
-        playerCoins -= shopRefreshCost;
-        currentUser.coins = playerCoins;
-        currentUser.save();
-
-        // Generate new shop items
-        refreshShop();
-        return;
-    }
-
-    // Handle shop item buy buttons
-    const itemsPerRow = 3;
-    const itemWidth = 210;
-    const itemHeight = 130;
-    const padding = 15;
-
-    for (let i = 0; i < shopItems.length; i++) {
-        const item = shopItems[i];
-        if (item.purchased) continue; // Skip purchased items
-
-        const row = Math.floor(i / itemsPerRow);
-        const col = i % itemsPerRow;
-
-        const x = padding + col * (itemWidth + padding);
-        const y = SHOP_Y_START + 60 + row * (itemHeight + padding);
-
-        const buttonWidth = 60;
-        const buttonHeight = 30;
-        const buttonX = x + itemWidth - buttonWidth - 10;
-        const buttonY = y + itemHeight - buttonHeight - 10;
-
-        if (mouseX > buttonX && mouseX < buttonX + buttonWidth &&
-            mouseY > buttonY && mouseY < buttonY + buttonHeight &&
-            playerCoins >= item.price) {
-
-            // Purchase the item
-            playerCoins -= item.price;
-            item.purchased = true;
-
-            // Add the block to available blocks
-            const newBlock = item.block();
-            // give new block random position in sidebar
-            newBlock.x = random(CODE_X + CODE_WIDTH + 50, width - 50);
-            newBlock.y = random(100, height - 150);
-            allBlocks.push(newBlock);
-
-            // Save the purchase to user data
-            // currentUser.purchasedItems = currentUser.purchasedItems || [];
-            // currentUser.purchasedItems.push(item.id);
-            // currentUser.coins = playerCoins;
-            // currentUser.save();
-
-            return;
-        }
-    }
-
-    // check if run button is pressed
-    if (mouseX > runButtonX && mouseX < runButtonX + runButtonWidth &&
-        mouseY > runButtonY && mouseY < runButtonY + runButtonHeight) {
-        runCode();
-    }
-
-    const targetBlock = findBlockAt(mouseX, mouseY, blocks.concat(allBlocks));
-
-    if (targetBlock && !targetBlock.isLocked) {
-        draggingBlock = targetBlock;
-        draggingBlock.offsetX = targetBlock.x - mouseX;
-        draggingBlock.offsetY = targetBlock.y - mouseY;
-        promoteBlock(draggingBlock);
-        removeBlock(draggingBlock);
-    }
 }
 
 // Call this function when setting up your game
