@@ -16,6 +16,8 @@ const BUTTON_Y_START = 500;
 const BUTTON_SPACING_Y = 40;
 const SHOP_Y_START = 700
 
+let currentState = "START_SCREEN"; // or "GAMEPLAY"
+
 let blocks = []; // Array of length NUM_LINES to hold blocks, Null if empty
 let allBlocks = [];
 let draggingBlock = null;
@@ -108,34 +110,32 @@ function setup() {
     canvas.position(0, 0);
     textSize(16);
     textFont('monospace');
-    // Initialize problem manager with default problems
-    problemManager = ProblemManager.setProblems();
 
-    // Load or create user
-    currentUser = User.load() || new User('user1', 'Player 1');
-
-    // shop = Shop.initializeDefaultShop();
-    setupShopSystem()
-
-    const firstProblem = problemManager.getProblem(problemManager.problemOrder[0]);
-    loadNextProblem(firstProblem);
+    setupStartScreen();
 }
 
 function draw() {
-    background(30);
-    drawCodeLines();
-    drawSidebar();
-    drawBlocks();
-    drawTarget();
-    drawShop();
+    switch (currentState) {
+        case "START_SCREEN":
+            drawStartScreen();
+            break;
+        case "GAMEPLAY":
+            background(30);
+            drawCodeLines();
+            drawSidebar();
+            drawBlocks();
+            drawTarget();
+            drawShop();
 
-    if (draggingBlock) {
-        draggingBlock.x = mouseX + draggingBlock.offsetX;
-        draggingBlock.y = mouseY + draggingBlock.offsetY;
-        draggingBlock.draw(true);
+            if (draggingBlock) {
+                draggingBlock.x = mouseX + draggingBlock.offsetX;
+                draggingBlock.y = mouseY + draggingBlock.offsetY;
+                draggingBlock.draw(true);
+            }
+
+            drawPopup()
+            break;
     }
-
-    drawPopup()
 }
 
 function drawCodeLines() {
@@ -652,6 +652,17 @@ function drawPopup() {
 }
 
 function mousePressed() {
+    switch (currentState) {
+        case "START_SCREEN":
+            handleStartMousePress();
+        case "GAMEPLAY":
+            // Your existing gameplay mousePressed logic
+            handleGamePlayMousePress();
+            break;
+    }
+}
+
+function handleGamePlayMousePress() {
     // Check if clicking on the next level button in success popup
     if (showPopup && popupType === "success") {
         let buttonX = width / 2 - 75;
