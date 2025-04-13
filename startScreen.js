@@ -203,6 +203,7 @@ function handleStartMousePress() {
         const firstProblem = problemManager.getProblem(problemManager.problemOrder[0]);
         loadNextProblem(firstProblem);
 
+
         currentState = "GAMEPLAY";
         return;
     }

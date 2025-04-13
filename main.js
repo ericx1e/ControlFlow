@@ -36,7 +36,13 @@ let shopSize = 3; // Number of items shown in the shop at once
 let shopItems = [];
 let playerCoins = 0;
 let problemNumber = 1
+let loseSound;
+let played = false
 
+
+function preload() {
+    loseSound = loadSound('sounds/vine-boom.mp3');
+}
 // Function to generate a new random shop
 function refreshShop() {
     // Mark all currently displayed items as not purchased for now
@@ -640,10 +646,17 @@ function drawPopup() {
         textSize(18);
         text("Next Level", width / 2, buttonY + 25);
     } else {
-        text("Try Again!", width / 2, popupY + 75);
+        text("You Lose!!", width / 2, popupY + 75);
 
         // Auto-hide failure popup after duration
         if (millis() - popupTimer > popupDuration) {
+            problemManager = ProblemManager.setProblems();
+            const firstProblem = problemManager.getProblem(problemManager.problemOrder[0]);
+            loadNextProblem(firstProblem);
+            // currentUser.currentProblem = problemManager.problemOrder[0]
+            // console.log(currentUser.currentProblem)
+            // loadNextProblem(problemManager.getProblem(currentUser.currentProblem));
+            problemNumber = 1
             showPopup = false;
         }
     }
@@ -1012,6 +1025,7 @@ function runCode() {
         popupType = "failure";
         popupTimer = millis(); // Start timer for auto-hide
         console.log(`Attempt ${result.attemptsMade}: Not quite right. Try again!`);
+        loseSound.play();
     }
 }
 
