@@ -38,6 +38,7 @@ let selectSound;
 let clickSound;
 let glitchSound;
 let coinSound;
+let backgroundMusic;
 let played = false
 
 let transitionActive = false;
@@ -46,6 +47,9 @@ let transitionProgress = 0;
 let transitionDuration = 30; // frames
 let transitionCallback = null;
 let transitionStartTime = 0;
+
+let cursorTrail = []; // holds { x, y, char, alpha, size }
+const cursorSymbols = ['x', '+', '-', '=', '*', '/', '0', '1', '!', '(', ')', '<', '>'];
 
 // Function to start a transition
 function startTransition(type, callback) {
@@ -102,6 +106,7 @@ function preload() {
     selectSound = loadSound('sounds/select.mp3');
     glitchSound = loadSound('sounds/glitch.mp3');
     coinSound = loadSound('sounds/coin.mp3');
+    backgroundMusic = loadSound('sounds/music.mp3');
 }
 // Function to generate a new random shop
 function refreshShop() {
@@ -177,6 +182,9 @@ function setup() {
     canvas.position(0, 0);
     textSize(16);
     textFont('monospace');
+    backgroundMusic.setVolume(0.5);
+    backgroundMusic.loop();
+    noCursor();
 
     setupStartScreen();
 }
@@ -219,12 +227,78 @@ function draw() {
             }
 
             drawPopup()
+
+            if (popupParticles.length > 0) {
+                for (let i = popupParticles.length - 1; i >= 0; i--) {
+                    let p = popupParticles[i];
+                    p.update();
+                    p.draw();
+                    if (!p.isAlive()) popupParticles.splice(i, 1);
+                }
+            }
             break;
     }
     if (transitionActive) {
         drawTransitionOverlay();
     }
+
+    // Limit total trail length
+    // if (cursorTrail.length > 10) cursorTrail.shift();
+
+    // // Draw the trail
+    // for (let i = 0; i < cursorTrail.length; i++) {
+    //     let p = cursorTrail[i];
+    //     let baseColor = mouseIsPressed
+    //         ? color(80, 170, 200, p.alpha)   // Click color (e.g., pink-red)
+    //         : color(100, 255, 200, p.alpha);  // Default color (e.g., green-cyan)
+
+    //     fill(baseColor);
+    //     textSize(p.size);
+    //     textAlign(CENTER, CENTER);
+    //     text(p.char, p.x, p.y);
+    //     p.alpha -= 25; // fade out
+    //     // p.size--;
+    // }
+    push();
+    // Cursor follows mouse
+    translate(mouseX, mouseY);
+
+    let baseColor = mouseIsPressed
+        ? color(80, 170, 200)   // Click color (e.g., pink-red)
+        : color(100, 255, 200);  // Default color (e.g., green-cyan)
+
+    // Glow effect
+    drawingContext.shadowBlur = 20;
+    drawingContext.shadowColor = color(100, 255, 200, 200);
+
+    // Cursor shape (stylized arrow or caret)
+    fill(baseColor);
+    noStroke();
+    beginShape();
+    vertex(0, 0);
+    vertex(12, 6);
+    vertex(6, 12);
+    vertex(0, 0);
+    endShape(CLOSE);
+
+    pop();
 }
+
+// function mouseMoved() {
+//     if (pmouseX - mouseX + pmouseY - mouseY > 2) {
+//         cursorTrail.push({
+//             x: mouseX,
+//             y: mouseY,
+//             char: random(cursorSymbols),
+//             alpha: 255,
+//             size: random(7, 13)
+//         });
+//     }
+// }
+
+// function mouseDragged() {
+//     mouseMoved();
+// }
 
 function drawCodeLines() {
     // Constants for the shifted layout - all scaled by 1.5x
@@ -249,6 +323,7 @@ function drawCodeLines() {
     fill(80, 180, 255);
     textSize(24); // Scaled up from 16
     textStyle(BOLD);
+    textAlign(LEFT, BASELINE);
     text("function solution()", CODE_AREA_START + LINE_NUMBER_WIDTH + 15, CODE_Y_START - 15); // Scaled up from 10, 10
     textStyle(NORMAL);
 
@@ -1052,7 +1127,7 @@ function drawPopup() {
         textSize(18);
         text("Next Level", width / 2, popupButtonY + 25);
         fill(255, 215, 0);
-        text("Income: " + coinsEarnedThisRound + " coins", width / 2, popupY + 100);
+        text("+" + coinsEarnedThisRound + " coins (+1 interest per 5)", width / 2, popupY + 100);
     } else {
         text("You Lose!!", width / 2, popupY + 75);
 
@@ -1468,6 +1543,46 @@ function flattenBlocks(arr) {
 }
 
 let coinsEarnedThisRound = 0;
+let popupParticles = [];
+
+class PopupParticle {
+    constructor(x, y, isGood) {
+        this.x = x;
+        this.y = y;
+        this.vx = random(-5, 5);
+        this.vy = random(-8, -2);
+        this.alpha = 255;
+        this.size = random(10, 20);
+        this.color = color(random(180, 255), random(180, 255), random(50, 150));
+        this.isGood = isGood;
+    }
+
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.vy += 0.1; // gravity
+        this.alpha -= 2;
+    }
+
+    draw() {
+        noStroke();
+        fill(red(this.color), green(this.color), blue(this.color), this.alpha);
+        // ellipse(this.x, this.y, this.size);
+        textSize(this.size);
+        textAlign(CENTER, CENTER);
+        if (this.isGood) {
+            text('🤩', this.x, this.y);
+        } else {
+            text('😭', this.x, this.y);
+        }
+    }
+
+    isAlive() {
+        return this.alpha > 0;
+    }
+}
+
+
 function runCode() {
     const problem = problemManager.getProblem(currentUser.currentProblem);
     const result = currentUser.submitSolution(blocks, problem);
@@ -1479,8 +1594,13 @@ function runCode() {
         console.log("Problem solved!");
         showPopup = true;
         popupType = "success";
-        coinsEarnedThisRound = 10 + Math.floor(playerCoins / 5);
+        coinsEarnedThisRound = 5 + Math.floor(playerCoins / 5);
         successSound.play()
+
+        // Trigger burst of particles
+        for (let i = 0; i < 60; i++) {
+            popupParticles.push(new PopupParticle(width / 2, height / 2, true));
+        }
 
         // Save progress
         // currentUser.save();
@@ -1500,6 +1620,10 @@ function runCode() {
         popupType = "failure";
         popupTimer = millis(); // Start timer for auto-hide
         console.log(`Attempt ${result.attemptsMade}: Not quite right. Try again!`);
+        // Trigger burst of particles
+        for (let i = 0; i < 60; i++) {
+            popupParticles.push(new PopupParticle(width / 2, height / 2, false));
+        }
         loseSound.play();
     }
 }
@@ -1531,7 +1655,7 @@ function loadNextProblem(nextProblem, transition = true) {
         refreshShop();
 
         // Gain 10 gold, extra 1 per 5 interest
-        playerCoins += 10 + Math.floor(playerCoins / 5);
+        playerCoins += 5 + Math.floor(playerCoins / 5);
     }
 
     if (transition) {
@@ -1572,3 +1696,14 @@ function factorial(n) {
     return n * factorial(n - 1);
 }
 
+function keyPressed() {
+    if (key == 'm') {
+        // mute music
+        console.log(backgroundMusic)
+        if (backgroundMusic.isPlaying()) {
+            backgroundMusic.stop();
+        } else {
+            backgroundMusic.play();
+        }
+    }
+}
