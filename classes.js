@@ -28,6 +28,7 @@ class CodeBlock {
         }
         rect(this.x, this.y, this.w, this.h, 6);
         fill(255);
+        textSize(14);
         text(this.text, this.x + 10, this.y + 20);
 
     }
@@ -116,6 +117,7 @@ class CompoundBlock extends CodeBlock {
     }
 
     draw(isDragging = false) {
+        textSize(14);
         // First: calculate dynamic width based on children
         let baseWidth = max(textWidth(this.text) + 40, this.baseWidth); // base for header
         let maxWidth = 0;
@@ -198,6 +200,7 @@ class HeaderBlock extends CodeBlock {
     }
 
     draw(isDragging = false) {
+        textSize(13);
         noStroke();
         fill(50, 50, 50, 150);
         rect(this.x + 3, this.y + 3, this.w, this.h, 6);
