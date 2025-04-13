@@ -37,11 +37,21 @@ let shopItems = [];
 let playerCoins = 0;
 let problemNumber = 1
 let loseSound;
+let successSound;
+let selectSound;
+let clickSound;
+let glitchSound;
+let coinSound;
 let played = false
 
 
 function preload() {
     loseSound = loadSound('sounds/vine-boom.mp3');
+    successSound = loadSound('sounds/success.mp3');
+    clickSound = loadSound('sounds/buttonsound.mp3');
+    selectSound = loadSound('sounds/select.mp3');
+    glitchSound = loadSound('sounds/glitch.mp3');
+    coinSound = loadSound('sounds/coin.mp3');
 }
 // Function to generate a new random shop
 function refreshShop() {
@@ -657,6 +667,8 @@ function drawPopup() {
             // console.log(currentUser.currentProblem)
             // loadNextProblem(problemManager.getProblem(currentUser.currentProblem));
             problemNumber = 1
+            refreshShop();
+            playerCoins = 0
             showPopup = false;
         }
     }
@@ -693,6 +705,7 @@ function handleGamePlayMousePress() {
             if (nextProblem) {
                 loadNextProblem(nextProblem);
                 problemNumber += 1
+                selectSound.play();
             } else {
                 console.log("Congratulations! You've completed all problems!");
                 // Could show a game completion popup here
@@ -715,6 +728,7 @@ function handleGamePlayMousePress() {
 
         // Generate new shop items
         refreshShop();
+        coinSound.play();
         return;
     }
 
@@ -754,6 +768,8 @@ function handleGamePlayMousePress() {
             // currentUser.coins = playerCoins;
             // currentUser.save();
 
+            // selectSound.play();
+            coinSound.play();
             return;
         }
     }
@@ -761,6 +777,7 @@ function handleGamePlayMousePress() {
     // check if run button is pressed
     if (mouseX > runButtonX && mouseX < runButtonX + runButtonWidth &&
         mouseY > runButtonY && mouseY < runButtonY + runButtonHeight) {
+        selectSound.play();
         runCode();
     }
 
@@ -770,6 +787,7 @@ function handleGamePlayMousePress() {
         draggingBlock = targetBlock;
         draggingBlock.offsetX = targetBlock.x - mouseX;
         draggingBlock.offsetY = targetBlock.y - mouseY;
+        selectSound.play();
         promoteBlock(draggingBlock);
         removeBlock(draggingBlock);
     }
@@ -870,12 +888,14 @@ function mouseReleased() {
         if (compoundHover) {
             compoundHover.addChild(draggingBlock);
             draggingBlock = null;
+            clickSound.play();
             return;
         }
     }
     if (compoundHover && draggingBlock) {
         compoundHover.addChild(draggingBlock);
         draggingBlock = null;
+        clickSound.play();
         return;
     }
 
@@ -901,6 +921,7 @@ function mouseReleased() {
                 blocks[ghostIndex].acceptHeader(draggingBlock);
             }
         }
+        clickSound.play();
     }
 
     draggingBlock = null;
@@ -1006,6 +1027,7 @@ function runCode() {
         // Gain 10 gold, extra 1 per 5 interest
         playerCoins += 10 + Math.floor(playerCoins / 5);
         popupType = "success";
+        successSound.play()
 
         // Save progress
         // currentUser.save();
@@ -1037,7 +1059,9 @@ function loadNextProblem(nextProblem) {
     // Reset blocks array
     blocks = [];
     refreshShop();
-    blocks.push(new CodeBlock("x = " + gameState.problem.initialValue + ";", CODE_X, CODE_Y_START, true));
+    let firstBlock = new CodeBlock("let x = " + gameState.problem.initialValue + ";", CODE_X, CODE_Y_START, true)
+    // firstBlock.w = (firstBlock.text.length + 5) * 7;
+    blocks.push(firstBlock);
     // blocks.push(...gameState.blocks);
 
     // Update available blocks

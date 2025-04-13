@@ -4,7 +4,8 @@ class CodeBlock {
         this.text = text;
         this.x = x;
         this.y = y;
-        this.w = textWidth(text) + 20;
+        textSize(14);
+        this.w = textWidth(text + '  ');
         this.h = 30;
         this.offsetX = 0;
         this.offsetY = 0;
@@ -16,6 +17,7 @@ class CodeBlock {
     }
 
     draw(isDragging = false) {
+        // this.w = textWidth(text + '    ');
         noStroke();
         // Drop shadow
         fill(50, 50, 50, 150);
@@ -194,8 +196,9 @@ class CompoundBlock extends CodeBlock {
 
 class HeaderBlock extends CodeBlock {
     constructor(text, x, y) {
+        textSize(13);
         super(text, x, y);
-        this.w = textWidth(text) + 20;
+        this.w = textWidth(text + '  ');
         this.h = 25;
     }
 
@@ -207,7 +210,7 @@ class HeaderBlock extends CodeBlock {
         fill(isDragging ? '#6a6' : '#4b4');
         rect(this.x, this.y, this.w, this.h, 6);
         fill(255);
-        text(this.text, this.x + 10, this.y + 20);
+        text(this.text, this.x + 10, this.y + 17);
     }
 
     isHeaderOnly() {

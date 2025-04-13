@@ -91,7 +91,7 @@ function drawStartScreen() {
     // Subtitle
     textSize(20);
     fill(180, 210, 255);
-    text("Master the Art of Programming", width / 2, 270);
+    text("Block by Block, Control Emerges", width / 2, 270);
 
     // Draw decorative code brackets
     drawCodeBrackets();
@@ -237,12 +237,14 @@ function drawButton(btn, label, isHovered, glitch) {
     noStroke();
     if (glitch) {
         fill(random(200, 255), random(50, 150), 255);
+        glitchSound.play();
     } else {
         if (isHovered) {
             fill(255);
         } else {
             fill(220);
         }
+        glitchSound.stop();
     }
     textAlign(CENTER, CENTER);
     textSize(24);
@@ -275,6 +277,8 @@ function handleStartMousePress() {
 
 
         currentState = "GAMEPLAY";
+        glitchSound.stop();
+        selectSound.play();
         return;
     }
 }
