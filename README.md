@@ -1,4 +1,7 @@
 ## [Play NOW](https://ericx1e.github.io/ControlFlow/)
+<img width="1440" alt="Screenshot 2025-04-13 at 6 36 42 AM" src="https://github.com/user-attachments/assets/b3f4f7b5-34ca-4970-98c5-1c4cc3eff412" />
+<img width="1440" alt="Screenshot 2025-04-13 at 10 31 17 AM" src="https://github.com/user-attachments/assets/db130392-8537-41c5-9405-88fd6237c6d5" />
+<img width="1440" alt="Screenshot 2025-04-13 at 6 47 47 AM" src="https://github.com/user-attachments/assets/e05301fe-c4f2-4661-a896-d1ba0b68ae36" />
 
 ### Inspiration
 Control Flow was inspired by Balatro, a roguelike card game that resembles poker. We thought it would be fun and challenging to incorporate programming puzzles into this style of game, something that's never been done before!
